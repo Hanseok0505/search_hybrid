@@ -1,4 +1,4 @@
-#!/bin/sh
+﻿#!/bin/sh
 set -eu
 
 OLLAMA_HOST="${OLLAMA_HOST:-${OLLAMA_BASE_URL:-http://host.docker.internal:11434}}"
