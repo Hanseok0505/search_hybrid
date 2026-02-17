@@ -1,0 +1,54 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+
+# Virtual env / tooling
+.venv/
+env/
+venv/
+
+# Testing and metadata
+.pytest_cache/
+pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Logs and runtime outputs
+*.log
+logs/
+*.tmp
+*.temp
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Local data generated at runtime
+data/uploads/
+data/uploaded_docs.json
+*.sqlite
+
+# Temporary/verification files in this repo
+*kor_*
+*tmp_*
+temp_*
+
+# OS / misc
+.DS_Store
+Thumbs.db
+
+# Air-gap artifacts
+airgap-bundle/
+airgap-bundle.tar.gz
+*.tar
+*.tar.gz
+
+# IDE
+.vscode/
+.idea/

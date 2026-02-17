@@ -1,0 +1,125 @@
+from __future__ import annotations
+import asyncio
+import time
+from app.utils.compat import to_thread
+
+from app.clients.elasticsearch_client import ElasticsearchClient
+from app.clients.graph_client import GraphSearchClient
+from app.clients.milvus_client import MilvusVectorClient
+from app.core.config import settings
+from app.domain.construction import merge_top_down_filters
+from app.models.schemas import SearchRequest, SearchResponse
+from app.services.cache import SearchCache
+from app.services.embedding_service import EmbeddingService
+from app.services.source_service import SourceService
+from app.services.llm_reranker import LLMReranker
+from app.services.ranking import weighted_reciprocal_rank_fusion
+
+
+class HybridSearchService:
+    def __init__(
+        self,
+        elastic: ElasticsearchClient,
+        vector: MilvusVectorClient,
+        graph: GraphSearchClient,
+        cache: SearchCache,
+        embedding: EmbeddingService,
+        reranker: LLMReranker,
+        source_service: SourceService,
+    ) -> None:
+        self.elastic = elastic
+        self.vector = vector
+        self.graph = graph
+        self.cache = cache
+        self.embedding = embedding
+        self.reranker = reranker
+        self.source_service = source_service
+
+    async def search(self, request: SearchRequest) -> SearchResponse:
+        start = time.perf_counter()
+        merged_filters = merge_top_down_filters(
+            request.filters or {},
+            request.top_down_context.model_dump(exclude_none=True) if request.top_down_context else {},
+        )
+        selected_ids = None if not request.selected_source_ids else sorted(request.selected_source_ids)
+        cache_key = self.cache.make_key(
+            {
+                "q": request.query,
+                "top_k": request.top_k,
+                "filters": merged_filters,
+                "selected_source_ids": selected_ids,
+                "embedded_only": request.embedded_only,
+                "rerank": request.rerank_with_llm,
+            }
+        )
+
+        if request.use_cache:
+            cached = await self.cache.get_json(cache_key)
+            if cached:
+                cached["cache_hit"] = True
+                return SearchResponse.model_validate(cached)
+            lock_token = await self.cache.acquire_lock(cache_key)
+            if lock_token is None:
+                waited = await self.cache.wait_for_value(cache_key)
+                if waited:
+                    waited["cache_hit"] = True
+                    return SearchResponse.model_validate(waited)
+        else:
+            lock_token = None
+
+        try:
+            embedding = await self.embedding.embed(request.query)
+            es_task = asyncio.create_task(self.elastic.search(request.query, request.top_k, merged_filters))
+            vec_task = asyncio.create_task(
+                self.vector.search(embedding, request.top_k, merged_filters, query_text=request.query)
+            )
+            graph_task = asyncio.create_task(self.graph.search(request.query, request.top_k, merged_filters))
+            local_task = asyncio.create_task(
+                to_thread(
+                self.source_service.local_search,
+                request.query,
+                request.top_k,
+                selected_ids=request.selected_source_ids,
+                embedded_only=request.embedded_only,
+                top_down_filters=merged_filters,
+                )
+            )
+
+            es_hits, vec_hits, graph_hits, local_hits = await asyncio.gather(
+                es_task,
+                vec_task,
+                graph_task,
+                local_task,
+            )
+            fused = weighted_reciprocal_rank_fusion(
+                ranked_lists={
+                    "elastic": es_hits,
+                    "vector": vec_hits,
+                    "graph": graph_hits,
+                    "local": local_hits,
+                },
+                weights={
+                    "elastic": settings.weight_elastic,
+                    "vector": settings.weight_vector,
+                    "graph": settings.weight_graph,
+                    "local": settings.weight_local,
+                },
+            )
+            if request.rerank_with_llm:
+                fused = await self.reranker.rerank(request.query, fused, request.top_k)
+            else:
+                fused = fused[: request.top_k]
+
+            took_ms = int((time.perf_counter() - start) * 1000)
+            response = SearchResponse(query=request.query, took_ms=took_ms, hits=fused, cache_hit=False)
+
+            if request.use_cache:
+                await self.cache.set_json(cache_key, response.model_dump())
+            return response
+        finally:
+            if request.use_cache and lock_token:
+                await self.cache.release_lock(cache_key, lock_token)
+
+
+
+

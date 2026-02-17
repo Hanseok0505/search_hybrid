@@ -1,0 +1,110 @@
+{
+  "settings": {
+    "number_of_shards": 6,
+    "number_of_replicas": 1,
+    "analysis": {
+      "analyzer": {
+        "ko_nori_index": {
+          "type": "custom",
+          "tokenizer": "nori_user_dict",
+          "filter": ["lowercase", "nori_part_of_speech", "nori_readingform"]
+        },
+        "ko_nori_search": {
+          "type": "custom",
+          "tokenizer": "nori_tokenizer",
+          "filter": ["lowercase", "nori_part_of_speech", "nori_readingform"]
+        }
+      },
+      "tokenizer": {
+        "nori_user_dict": {
+          "type": "nori_tokenizer",
+          "decompound_mode": "mixed"
+        }
+      },
+      "normalizer": {
+        "lowercase_normalizer": {
+          "type": "custom",
+          "filter": ["lowercase", "asciifolding"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "dynamic": "strict",
+    "properties": {
+      "id": { "type": "keyword" },
+      "title": {
+        "type": "text",
+        "analyzer": "ko_nori_index",
+        "search_analyzer": "ko_nori_search"
+      },
+      "summary": {
+        "type": "text",
+        "analyzer": "ko_nori_index",
+        "search_analyzer": "ko_nori_search"
+      },
+      "content": {
+        "type": "text",
+        "analyzer": "ko_nori_index",
+        "search_analyzer": "ko_nori_search"
+      },
+      "scope_text": {
+        "type": "text",
+        "analyzer": "ko_nori_index",
+        "search_analyzer": "ko_nori_search"
+      },
+      "method_statement": {
+        "type": "text",
+        "analyzer": "ko_nori_index",
+        "search_analyzer": "ko_nori_search"
+      },
+      "risk_register": {
+        "type": "text",
+        "analyzer": "ko_nori_index",
+        "search_analyzer": "ko_nori_search"
+      },
+      "quality_checklist": {
+        "type": "text",
+        "analyzer": "ko_nori_index",
+        "search_analyzer": "ko_nori_search"
+      },
+      "schedule_notes": {
+        "type": "text",
+        "analyzer": "ko_nori_index",
+        "search_analyzer": "ko_nori_search"
+      },
+      "asset_tags": { "type": "keyword" },
+      "wbs_code": { "type": "keyword", "normalizer": "lowercase_normalizer" },
+      "package_code": { "type": "keyword", "normalizer": "lowercase_normalizer" },
+      "task_code": { "type": "keyword", "normalizer": "lowercase_normalizer" },
+      "csi_division": { "type": "keyword", "normalizer": "lowercase_normalizer" },
+      "spec_section": { "type": "keyword", "normalizer": "lowercase_normalizer" },
+      "updated_at": { "type": "date" },
+      "metadata": {
+        "properties": {
+          "portfolio_id": { "type": "keyword" },
+          "program_id": { "type": "keyword" },
+          "project_id": { "type": "keyword" },
+          "site_code": { "type": "keyword" },
+          "asset_type": { "type": "keyword" },
+          "zone": { "type": "keyword" },
+          "building": { "type": "keyword" },
+          "level": { "type": "keyword" },
+          "package_code": { "type": "keyword" },
+          "work_type": { "type": "keyword" },
+          "discipline": { "type": "keyword" },
+          "activity": { "type": "keyword" },
+          "task_code": { "type": "keyword" },
+          "wbs_code": { "type": "keyword" },
+          "csi_division": { "type": "keyword" },
+          "spec_section": { "type": "keyword" },
+          "contractor": { "type": "keyword" },
+          "safety_risk_class": { "type": "keyword" },
+          "quality_check_type": { "type": "keyword" },
+          "schedule_window": { "type": "keyword" },
+          "execution_readiness": { "type": "float" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hybrid Search Workspace</title>
+  <style>
+    :root {
+      --bg: #eef2ff;
+      --panel: #ffffff;
+      --panel-soft: #f6f8fc;
+      --line: #d4deee;
+      --text: #18243a;
+      --muted: #61728d;
+      --primary: #3557ff;
+      --primary-2: #00a5a5;
+      --danger: #b91c1c;
+      --warn: #c26a00;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: "Inter", "Noto Sans KR", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(1200px 600px at 90% -10%, #dce8ff, transparent 60%),
+        radial-gradient(900px 500px at 0% 0%, #e2f9f9, transparent 45%),
+        var(--bg);
+    }
+    .topbar {
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    .topbar h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .topbar small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn.primary {
+      color: #fff;
+      border: 0;
+      background: linear-gradient(90deg, var(--primary), var(--primary-2));
+    }
+    .btn.ghost {
+      background: var(--panel-soft);
+      color: var(--text);
+    }
+    .status {
+      min-width: 170px;
+      text-align: right;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .layout {
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 300px 1fr 360px;
+      gap: 14px;
+      min-height: calc(100vh - 59px);
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .panel-hd {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      font-size: 14px;
+      background: var(--panel-soft);
+    }
+    .panel-bd {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      overflow: auto;
+      min-height: 0;
+    }
+    label {
+      display: block;
+      margin: 2px 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    input[type="text"], input[type="number"], textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 9px;
+      padding: 8px 10px;
+      font-size: 13px;
+      color: var(--text);
+    }
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+      font-family: "Inter", "Noto Sans KR", sans-serif;
+      line-height: 1.4;
+    }
+    .row {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: 1fr 1fr;
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .warn {
+      color: var(--warn);
+    }
+    .error {
+      color: var(--danger);
+    }
+    .source-list {
+      display: grid;
+      gap: 8px;
+      padding: 2px 0;
+    }
+    .source-item {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 10px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px;
+      align-items: start;
+      background: #fff;
+    }
+    .source-title {
+      font-weight: 700;
+      font-size: 13px;
+      line-height: 1.3;
+    }
+    .source-id {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px;
+      word-break: break-all;
+    }
+    .pill {
+      margin-top: 6px;
+      font-size: 10px;
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 8px;
+      background: #e9edff;
+      color: #2d458f;
+      font-weight: 700;
+    }
+    .pre {
+      margin: 0;
+      background: #fbfdff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      font-family: ui-monospace, Consolas, "D2Coding", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 100px;
+      max-height: 260px;
+      overflow: auto;
+    }
+    .answer {
+      background: #f3f7ff;
+      border: 1px solid #cfe0ff;
+      border-radius: 10px;
+      padding: 10px;
+      min-height: 180px;
+      white-space: pre-wrap;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+    .small {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    @media (max-width: 1200px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .status {
+        text-align: left;
+      }
+      .panel {
+        min-height: 420px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Hybrid Search Workspace</h1>
+      <small>Construction RAG console</small>
+    </div>
+    <div>
+      <span id="statusBadges" class="meta">Health: loading...</span>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="refreshAll()">Refresh</button>
+      <button class="btn ghost" onclick="runCacheInvalidate()">Invalidate Search Cache</button>
+    </div>
+    <div class="status" id="statusLine"></div>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <div class="panel-hd">
+        <span>01. Sources</span>
+        <span id="embeddedOnlyText" class="small">embedded-only filter off</span>
+      </div>
+      <div class="panel-bd">
+        <label>Upload file</label>
+        <input type="file" id="uploadFile" />
+
+        <label>Top-down context JSON</label>
+        <textarea id="uploadCtx">{"project_id":"PROJ-SMART-CAMPUS","building":"TOWER-A","level":"B2"}</textarea>
+
+        <div class="row">
+          <label><input type="checkbox" id="alreadyEmbedded" /> mark as already embedded</label>
+          <label><input type="checkbox" id="embeddedOnly" onchange="refreshSourceFilter()"> embedded-only only</label>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn primary" onclick="uploadSource()">Upload + Index</button>
+          <button class="btn ghost" onclick="loadSources()">Reload Sources</button>
+        </div>
+        <div id="uploadMsg" class="meta"></div>
+
+        <hr style="border:0;border-top:1px solid var(--line);" />
+        <div class="small">Source list (select before asking):</div>
+        <div id="sources" class="source-list"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-hd">
+        <span>02. Search / RAG</span>
+        <span class="small" id="modelHint"></span>
+      </div>
+      <div class="panel-bd">
+        <div class="row">
+          <div>
+            <label>Provider</label>
+            <select id="provider" onchange="loadModels()">
+              <option value="ollama">ollama</option>
+              <option value="openai_compatible">openai_compatible</option>
+              <option value="openai">openai</option>
+              <option value="bedrock">bedrock</option>
+            </select>
+          </div>
+          <div>
+            <label>Model</label>
+            <select id="model"></select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Top K</label>
+            <input id="topK" type="number" min="1" max="50" value="8" />
+          </div>
+          <div>
+            <label>Max Tokens</label>
+            <input id="maxTokens" type="number" min="32" max="8192" value="512" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Cache</label>
+            <select id="useCache">
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select>
+          </div>
+        </div>
+
+        <label>Top-down context JSON</label>
+        <textarea id="askCtx">{"project_id":"PROJ-SMART-CAMPUS","building":"TOWER-A","level":"B2","package_code":"PKG-STR-001","work_type":"concrete"}</textarea>
+
+        <label>Question</label>
+        <textarea id="askQuery">Summarize slab pour risk controls and readiness evidence.</textarea>
+
+        <div class="btn-row">
+          <button class="btn primary" onclick="runAsk()">Run RAG Answer</button>
+          <button class="btn ghost" onclick="runSearchOnly()">Search Only</button>
+          <button class="btn ghost" onclick="runFreeAnswer()">Free API</button>
+        </div>
+
+        <div class="meta">
+          Non-RAG: "Free API" is utility lookup.
+          RAG answer always goes through <strong>/v1/ask</strong> (retrieval + synthesis).
+        </div>
+
+        <div class="small">Final Answer</div>
+        <div id="answerOut" class="answer">No answer yet.</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-hd">
+        <span>03. Debug / Observability</span>
+      </div>
+      <div class="panel-bd">
+        <div>
+          <div class="small">Retrieved hits (ranked)</div>
+          <pre id="hitsOut" class="pre">{}</pre>
+        </div>
+
+        <div>
+          <div class="small">Upload response</div>
+          <pre id="uploadOut" class="pre">{}</pre>
+        </div>
+
+        <div>
+          <div class="small">Free API response</div>
+          <pre id="freeOut" class="pre">{}</pre>
+        </div>
+
+        <div>
+          <div class="small">Cache stats</div>
+          <pre id="cacheOut" class="pre">{}</pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const DEFAULT_OLLAMA_MODEL = "gpt-oss-120b-cloud";
+
+    function isModelAvailable(option) {
+      if (!option) {
+        return false;
+      }
+      return option.dataset.available === "true";
+    }
+
+    function safeJson(text, fallback = {}) {
+      try { return JSON.parse(text || "{}"); } catch { return fallback; }
+    }
+
+    function esc(str) {
+      return (str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function selectedIds() {
+      return Array.from(document.querySelectorAll(".src-check:checked")).map((x) => x.value);
+    }
+
+    async function refreshAll() {
+      await Promise.all([checkHealth(), loadSources(), loadModels()]);
+      await refreshCacheStats();
+    }
+
+    async function checkHealth() {
+      try {
+        const r = await fetch("/v1/health");
+        if (!r.ok) {
+          throw new Error(`HTTP ${r.status}`);
+        }
+        const data = await r.json();
+        document.getElementById("statusBadges").textContent =
+          `Health: ${data.status} | elastic=${data.elastic}, milvus=${data.milvus}, graph=${data.graph}, redis=${data.redis}`;
+      } catch (e) {
+        document.getElementById("statusBadges").textContent = `Health: ${e.message}`;
+      }
+    }
+
+    function refreshSourceFilter() {
+      const on = document.getElementById("embeddedOnly").checked;
+      document.getElementById("embeddedOnlyText").textContent =
+        on ? "embedded-only filter on" : "embedded-only filter off";
+    }
+
+    async function loadSources() {
+      try {
+        const res = await fetch("/v1/sources");
+        const data = await res.json();
+        const root = document.getElementById("sources");
+        const items = data.items || [];
+        refreshSourceFilter();
+
+        if (!items.length) {
+          root.innerHTML = '<div class="meta">No sources found.</div>';
+          return;
+        }
+        root.innerHTML = items.map((s) => `
+          <label class="source-item">
+            <input class="src-check" type="checkbox" value="${esc(s.id)}" />
+            <div>
+              <div class="source-title">${esc(s.title || s.id)}</div>
+              <div class="source-id">${esc(s.id)}</div>
+              <span class="pill">${esc(s.source_type)}${s.embedded ? " | embedded" : ""}</span>
+            </div>
+          </label>
+        `).join("");
+      } catch (e) {
+        document.getElementById("sources").innerHTML = `<div class="error">${e.message}</div>`;
+      }
+    }
+
+    async function loadModels() {
+      const provider = document.getElementById("provider").value;
+      const modelSel = document.getElementById("model");
+      const hint = document.getElementById("modelHint");
+      modelSel.innerHTML = "";
+      const targetModel = provider === "ollama" ? DEFAULT_OLLAMA_MODEL : "";
+
+      try {
+        const res = await fetch(`/v1/models?provider=${encodeURIComponent(provider)}`);
+        const data = await res.json();
+        const items = data.items || [];
+        let targetIndex = -1;
+        let targetAvailable = false;
+        const fallbackCandidate = [];
+        items.forEach((m, idx) => {
+          const opt = document.createElement("option");
+          opt.value = m.model;
+          opt.dataset.available = m.available ? "true" : "false";
+          opt.textContent = `${m.model}${m.available ? "" : " (unreachable)"}`;
+
+          if (m.model === targetModel && provider === "ollama") {
+            targetIndex = idx;
+            targetAvailable = !!m.available;
+          }
+          if (provider === "ollama" && m.available) {
+            fallbackCandidate.push(opt);
+          }
+          modelSel.appendChild(opt);
+        });
+
+        if (provider === "ollama") {
+          const preferred = targetIndex >= 0 ? modelSel.options[targetIndex] : null;
+          if (preferred && isModelAvailable(preferred)) {
+            modelSel.value = preferred.value;
+          } else if (fallbackCandidate.length) {
+            modelSel.value = fallbackCandidate[0].value;
+            if (!targetAvailable) {
+              hint.innerHTML = `<span class="warn">Default Ollama model '${DEFAULT_OLLAMA_MODEL}' is unavailable. Switched to available model '${modelSel.value}'.</span>`;
+            }
+          } else if (targetIndex >= 0) {
+            modelSel.value = targetModel;
+          }
+        } else if (targetIndex >= 0) {
+          modelSel.value = targetModel;
+        }
+
+        if (!modelSel.value && items.length) {
+          modelSel.value = items[0].model;
+        }
+        if (!items.length) {
+          const fallback = document.createElement("option");
+          fallback.value = "";
+          fallback.textContent = "(no model)";
+          modelSel.appendChild(fallback);
+        }
+
+        const anyAvailable = items.some((m) => m.available);
+        if (provider === "ollama") {
+          if (targetIndex >= 0 && !targetAvailable) {
+            if (!fallbackCandidate.length) {
+              hint.innerHTML = "<span class=\"warn\">Default Ollama model is unreachable and no ready model found.</span>";
+            }
+          } else if (!anyAvailable) {
+            hint.innerHTML = "<span class=\"warn\">No reachable Ollama model found.</span>";
+          } else {
+            hint.textContent = "";
+          }
+        } else {
+          hint.textContent = "";
+        }
+      } catch (e) {
+        const fallback = document.createElement("option");
+        fallback.value = "";
+        fallback.textContent = "(model load failed)";
+        modelSel.appendChild(fallback);
+        hint.textContent = e.message;
+      }
+    }
+
+    async function refreshCacheStats() {
+      try {
+        const res = await fetch("/v1/cache/stats");
+        if (res.status === 404) {
+          document.getElementById("cacheOut").textContent = "cache endpoint not found";
+          return;
+        }
+        const data = await res.json();
+        document.getElementById("cacheOut").textContent = JSON.stringify(data, null, 2);
+      } catch (e) {
+        document.getElementById("cacheOut").textContent = e.message;
+      }
+    }
+
+    async function runCacheInvalidate() {
+      try {
+        const res = await fetch("/v1/cache/invalidate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prefix: "search:" }),
+        });
+        const data = await res.json();
+        document.getElementById("statusLine").textContent = `cache invalidated: ${data.deleted}`;
+        await refreshCacheStats();
+      } catch (e) {
+        document.getElementById("statusLine").textContent = e.message;
+      }
+    }
+
+    async function uploadSource() {
+      const file = document.getElementById("uploadFile").files[0];
+      if (!file) {
+        document.getElementById("uploadMsg").textContent = "Select a file first.";
+        return;
+      }
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("top_down_context", document.getElementById("uploadCtx").value || "{}");
+      fd.append("already_embedded", document.getElementById("alreadyEmbedded").checked ? "true" : "false");
+
+      try {
+        const res = await fetch("/v1/upload", { method: "POST", body: fd });
+        const data = await res.json();
+        document.getElementById("uploadOut").textContent = JSON.stringify(data, null, 2);
+        document.getElementById("uploadMsg").textContent = data.warning || "Uploaded.";
+        await loadSources();
+      } catch (e) {
+        document.getElementById("uploadMsg").textContent = e.message;
+      }
+    }
+
+    async function runAsk() {
+      const model = selectedModelOrFallback();
+      const body = {
+        query: document.getElementById("askQuery").value,
+        top_k: Number(document.getElementById("topK").value || 8),
+        max_tokens: Number(document.getElementById("maxTokens").value || 512),
+        top_down_context: safeJson(document.getElementById("askCtx").value || "{}"),
+        selected_source_ids: selectedIds(),
+        embedded_only: document.getElementById("embeddedOnly").checked,
+        provider: document.getElementById("provider").value,
+        model: model,
+        use_cache: document.getElementById("useCache").value === "true",
+      };
+      if (!body.model) {
+        delete body.model;
+      }
+
+      const res = await fetch("/v1/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      document.getElementById("answerOut").textContent = data.answer || "(empty)";
+      document.getElementById("hitsOut").textContent = JSON.stringify(data.hits || [], null, 2);
+      await refreshCacheStats();
+    }
+
+    function selectedModelOrFallback() {
+      const modelSel = document.getElementById("model");
+      const provider = document.getElementById("provider").value;
+      const selected = modelSel.value;
+      if (!selected) {
+        return "";
+      }
+      if (provider !== "ollama") {
+        return selected;
+      }
+      const selectedOpt = [...modelSel.options].find((x) => x.value === selected);
+      if (isModelAvailable(selectedOpt)) {
+        return selected;
+      }
+
+      const available = [...modelSel.options].find((x) => isModelAvailable(x));
+      return available ? available.value : DEFAULT_OLLAMA_MODEL;
+    }
+
+    async function runSearchOnly() {
+      const body = {
+        query: document.getElementById("askQuery").value,
+        top_k: Number(document.getElementById("topK").value || 8),
+        top_down_context: safeJson(document.getElementById("askCtx").value || "{}"),
+        selected_source_ids: selectedIds(),
+        embedded_only: document.getElementById("embeddedOnly").checked,
+        use_cache: document.getElementById("useCache").value === "true",
+        rerank_with_llm: false,
+      };
+
+      const res = await fetch("/v1/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      document.getElementById("hitsOut").textContent = JSON.stringify(data, null, 2);
+      document.getElementById("answerOut").textContent = "Search-only completed. Select a source and run RAG answer to ground results.";
+      await refreshCacheStats();
+    }
+
+    async function runFreeAnswer() {
+      const query = document.getElementById("askQuery").value;
+      try {
+        const res = await fetch("/v1/free/answer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query }),
+        });
+        const data = await res.json();
+        document.getElementById("freeOut").textContent = JSON.stringify(data, null, 2);
+      } catch (e) {
+        document.getElementById("freeOut").textContent = e.message;
+      }
+    }
+
+    refreshAll();
+  </script>
+</body>
+</html>
