@@ -22,16 +22,16 @@ This creates:
   - `.env.airgap.example`
   - `AIR_GAP_DEPLOYMENT.md`
   - `load_bundle.sh`
-  - `nginx.conf`, `redis.conf`
+  - `infra/nginx/nginx.conf`, `infra/redis/redis.conf`
 
 If you use a private app image tag, set:
 
 ```bash
-IMAGE_TAG=registry.local/hybrid-search:airgap \
+APP_IMAGE_NAME=registry.local/hybrid-search:airgap \
 scripts/airgap/build_offline_bundle.sh
 ```
 
-Then update `.env` values in the target server and use the same tag in compose if changed.
+Then update `.env.airgap` values in the target server and use the same tag in compose if changed.
 
 ## 2) Transfer to air-gapped Ubuntu host
 
@@ -48,7 +48,7 @@ mkdir -p /opt/hybrid-search
 tar -xzf /tmp/airgap-bundle.tar.gz -C /opt/hybrid-search
 cd /opt/hybrid-search/airgap-bundle
 chmod +x load_bundle.sh
-./load_bundle.sh
+bash load_bundle.sh
 ```
 
 ## 4) Configure runtime
