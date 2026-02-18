@@ -22,6 +22,7 @@ This creates:
   - `.env.airgap.example`
   - `AIR_GAP_DEPLOYMENT.md`
   - `load_bundle.sh`
+  - `deploy_airgap.sh`
   - `infra/nginx/nginx.conf`, `infra/redis/redis.conf`
 
 If you use a private app image tag, set:
@@ -46,9 +47,9 @@ scp /path/airgap-bundle.tar.gz <offline-host>:/tmp/
 ```bash
 mkdir -p /opt/hybrid-search
 tar -xzf /tmp/airgap-bundle.tar.gz -C /opt/hybrid-search
+chmod +x /opt/hybrid-search/airgap-bundle/deploy_airgap.sh
 cd /opt/hybrid-search/airgap-bundle
-chmod +x load_bundle.sh
-bash load_bundle.sh
+AIRGAP_AUTOSTART=1 AIRGAP_WAIT_HEALTH=1 bash deploy_airgap.sh /tmp/airgap-bundle.tar.gz /opt/hybrid-search
 ```
 
 ## 4) Configure runtime
@@ -70,6 +71,7 @@ Edit `.env.airgap`:
 ## 5) Start services
 
 ```bash
+cd /opt/hybrid-search/airgap-bundle
 docker compose -f docker-compose.airgap.yml --env-file .env.airgap up -d
 ```
 

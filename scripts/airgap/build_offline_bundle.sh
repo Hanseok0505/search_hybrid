@@ -55,8 +55,10 @@ cp "$ROOT_DIR/.env.example" "$BUNDLE_DIR/.env.airgap.example"
 cp "$ROOT_DIR/.env.example" "$BUNDLE_DIR/.env.airgap"
 cp "$ROOT_DIR/docs/AIR_GAP_DEPLOYMENT.md" "$BUNDLE_DIR/AIR_GAP_DEPLOYMENT.md"
 cp "$ROOT_DIR/scripts/airgap/load_bundle.sh" "$BUNDLE_DIR/load_bundle.sh"
+cp "$ROOT_DIR/scripts/airgap/deploy_airgap.sh" "$BUNDLE_DIR/deploy_airgap.sh"
 
 chmod +x "$BUNDLE_DIR/load_bundle.sh"
+chmod +x "$BUNDLE_DIR/deploy_airgap.sh"
 
 # 5) compress
 cd "$ROOT_DIR"

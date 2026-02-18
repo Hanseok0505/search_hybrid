@@ -195,3 +195,12 @@ See the full guide:
 ```bash
 docs/AIR_GAP_DEPLOYMENT.md
 ```
+
+Quick one-shot on an offline Ubuntu host:
+
+```bash
+AIRGAP_BUNDLE_PATH=/tmp/airgap-bundle.tar.gz \\
+AIRGAP_AUTOSTART=1 \\
+AIRGAP_WAIT_HEALTH=1 \\
+bash airgap-bundle/deploy_airgap.sh /tmp/airgap-bundle.tar.gz /opt/hybrid-search
+```
