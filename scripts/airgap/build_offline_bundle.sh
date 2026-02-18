@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 ROOT_DIR="${ROOT_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}"
@@ -6,6 +6,15 @@ BUNDLE_DIR="${BUNDLE_DIR:-$ROOT_DIR/airgap-bundle}"
 BUNDLE_NAME="${BUNDLE_NAME:-airgap-bundle.tar.gz}"
 APP_IMAGE_NAME="${APP_IMAGE_NAME:-hybrid-search:latest}"
 COMPOSE_FILE="${COMPOSE_FILE:-$ROOT_DIR/docker-compose.airgap.yml}"
+
+if ! command -v docker >/dev/null 2>&1; then
+  echo "[airgap] ERROR: docker is not installed or not in PATH"
+  exit 1
+fi
+if ! docker info >/dev/null 2>&1; then
+  echo "[airgap] ERROR: docker daemon is not running. Start Docker Desktop (or daemon) before building the bundle."
+  exit 1
+fi
 
 mkdir -p "$ROOT_DIR/scripts/airgap"
 cd "$ROOT_DIR"

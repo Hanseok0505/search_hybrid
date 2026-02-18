@@ -7,6 +7,7 @@ This project provides an offline deployment package for an Ubuntu 22.04 host wit
 Requirements:
 - Docker + Docker Compose v2
 - Ollama running locally (optional) if you want on-prem LLMs
+- Docker daemon must be running when creating or deploying the bundle.
 
 From repository root:
 

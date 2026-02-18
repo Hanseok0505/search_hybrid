@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 BUNDLE_PATH="${1:-${AIRGAP_BUNDLE_PATH:-airgap-bundle.tar.gz}}"
@@ -21,6 +21,10 @@ fi
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "[airgap-deploy] ERROR: docker is not installed or not in PATH"
+  exit 1
+fi
+if ! docker info >/dev/null 2>&1; then
+  echo "[airgap-deploy] ERROR: docker daemon is not running. Start Docker Desktop (or daemon) and retry."
   exit 1
 fi
 

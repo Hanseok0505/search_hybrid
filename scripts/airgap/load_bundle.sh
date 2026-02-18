@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -12,6 +12,15 @@ fi
 
 if [[ ! -d "$IMAGE_DIR" ]]; then
   echo "[airgap] ERROR: image directory not found: $IMAGE_DIR"
+  exit 1
+fi
+
+if ! command -v docker >/dev/null 2>&1; then
+  echo "[airgap] ERROR: docker is not installed or not in PATH"
+  exit 1
+fi
+if ! docker info >/dev/null 2>&1; then
+  echo "[airgap] ERROR: docker daemon is not running. Start Docker Desktop (or daemon) and retry."
   exit 1
 fi
 
