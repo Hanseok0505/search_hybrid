@@ -171,12 +171,14 @@ async def ask(payload: AskRequest, container: Container = Depends(get_container)
         hits = hits[: payload.top_k]
     hits = hits[: payload.top_k]
 
-    answer, model_used = await _answer_from_hits(payload, hits, container)
+    answer, model_used, rag_synthesized, fallback_reason = await _answer_from_hits(payload, hits, container)
     return AskResponse(
         answer=answer,
         provider=payload.provider,
         model=model_used,
         hits=hits,
+        rag_synthesized=rag_synthesized,
+        fallback_reason=fallback_reason,
     )
 
 
@@ -225,11 +227,13 @@ async def _answer_from_hits(
     payload: AskRequest,
     hits: list[Candidate],
     container: Container,
-) -> tuple[str, str]:
+) -> tuple[str, str, bool, Optional[str]]:
     if not hits:
         return (
             "No matching sources were found. Try broadening filters or unchecking embedded-only.",
             payload.model or "",
+            False,
+            "no_matching_sources",
         )
 
     max_tokens = payload.max_tokens
@@ -267,10 +271,15 @@ async def _answer_from_hits(
         text = (out.get("output_text") or "").strip()
         model_used = out.get("model") or (payload.model or payload.provider)
         if not text:
-            return _build_extract_answer(payload.query, hits), model_used
-        return text, model_used
-    except Exception:
-        return _build_extract_answer(payload.query, hits), payload.model or payload.provider
+            return _build_extract_answer(payload.query, hits), model_used, False, "llm_empty_output"
+        return text, model_used, True, None
+    except Exception as exc:
+        return (
+            _build_extract_answer(payload.query, hits),
+            payload.model or payload.provider,
+            False,
+            f"llm_generation_failed: {exc}",
+        )
 
 
 def _build_extract_answer(query: str, hits: list[Candidate]) -> str:

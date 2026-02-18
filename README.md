@@ -155,6 +155,24 @@ conda run -n hybrid-search python scripts/run_integrated_smoke_check.py \
   --model gpt-oss-120b-cloud
 ```
 
+## 9. Ask Synthesis Status
+
+`/v1/ask` now returns additional fields:
+
+- `rag_synthesized` (bool): `true` when LLM answer was generated; `false` when fallback source summarization was used.
+- `fallback_reason` (string | null): `null` on LLM success, otherwise reason text.
+
+```json
+{
+  "answer": "...",
+  "provider": "ollama",
+  "model": "gpt-oss-120b-cloud",
+  "hits": [...],
+  "rag_synthesized": false,
+  "fallback_reason": "llm_generation_failed: ..."
+}
+```
+
 ## 9. Upload Type Matrix Check
 Validates file upload → parse → search flow across common file types.
 

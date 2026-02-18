@@ -165,6 +165,8 @@ class AskResponse(BaseModel):
     provider: str
     model: str
     hits: List[Candidate]
+    rag_synthesized: bool = True
+    fallback_reason: Optional[str] = None
 
 
 

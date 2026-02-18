@@ -76,6 +76,16 @@ cd /opt/hybrid-search/airgap-bundle
 docker compose -f docker-compose.airgap.yml --env-file .env.airgap up -d
 ```
 
+Preflight checklist (recommended on each deploy):
+
+- Validate bundle files:
+  - `ls -la /opt/hybrid-search/airgap-bundle`
+  - `ls /opt/hybrid-search/airgap-bundle/images/*.tar`
+- Validate image preload:
+  - `docker image ls | grep -E "hybrid-search|elasticsearch|milvusdb/milvus|neo4j|redis|nginx|redisinsight"`
+- Validate compose config:
+  - `docker compose -f docker-compose.airgap.yml config`
+
 Check readiness:
 
 ```bash

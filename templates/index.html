@@ -336,6 +336,7 @@
         </div>
 
         <div class="small">Final Answer</div>
+        <div id="askMeta" class="meta"></div>
         <div id="answerOut" class="answer">No answer yet.</div>
       </div>
     </section>
@@ -597,6 +598,9 @@
       });
       const data = await res.json();
       document.getElementById("answerOut").textContent = data.answer || "(empty)";
+      document.getElementById("askMeta").textContent = data.rag_synthesized
+        ? "RAG synthesis: model generated"
+        : `RAG synthesis: fallback (${data.fallback_reason || "unknown"})`;
       document.getElementById("hitsOut").textContent = JSON.stringify(data.hits || [], null, 2);
       await refreshCacheStats();
     }
