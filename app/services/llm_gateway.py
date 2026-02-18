@@ -150,12 +150,15 @@ class LLMGateway:
                         max_tokens=payload.max_tokens or 1024,
                         timeout=self._ollama_timeout,
                     )
-                    self._active_ollama_url = base
                     raw_dict = self._to_raw_dict(raw)
                     text = ""
                     choices = raw_dict.get("choices", []) or []
                     if choices:
                         text = choices[0].get("message", {}).get("content", "")
+                    if not text:
+                        last_error = f"{model}: empty completion at {base}"
+                        continue
+                    self._active_ollama_url = base
                     return {"model": model, "output_text": text, "raw": raw_dict}
                 except Exception as exc:
                     last_error = f"{model}: {str(exc)}"
@@ -190,12 +193,15 @@ class LLMGateway:
                         first = data[0] if isinstance(data[0], dict) else {}
                         emb = first.get("embedding", [])
                         if emb:
+                            self._active_ollama_url = base
                             return {"model": model, "embedding": emb, "raw": raw_dict}
                         if "embedding" in raw_dict:
+                            self._active_ollama_url = base
                             return {"model": model, "embedding": raw_dict.get("embedding", []), "raw": raw_dict}
                     if "data" in raw_dict and isinstance(raw_dict["data"], list) and raw_dict["data"] == []:
                         continue
                     if raw_dict.get("embedding") is not None:
+                        self._active_ollama_url = base
                         return {"model": model, "embedding": raw_dict.get("embedding", []), "raw": raw_dict}
                 except Exception as exc:
                     last_error = f"{model}: {str(exc)}"
