@@ -11,7 +11,6 @@ router = APIRouter(tags=["ui"])
 @router.get("/ui", response_class=HTMLResponse)
 async def ui_page(request: Request):
     return templates.TemplateResponse(
-        request=request,
-        name="index.html",
-        context={},
+        "index.html",
+        {"request": request},
     )
