@@ -12,6 +12,8 @@ from app.core.config import settings
 from app.domain.construction import (
     ELASTIC_QUERY_FIELDS,
     TOP_DOWN_FILTER_KEYS,
+    build_query_field_candidates,
+    normalize_filter_variants,
     build_context_should_clauses,
     build_function_score_functions,
     expand_construction_query,
@@ -101,6 +103,8 @@ class ElasticsearchClient:
             return []
         if self._sample_mode and self._sample:
             return self._sample.keyword_search(query=query, top_k=top_k, source="elastic", filters=filters)
+        if not await self._ensure_index():
+            return []
 
         expanded_query = expand_construction_query(query)
         must_clause: list[dict] = [
@@ -117,8 +121,16 @@ class ElasticsearchClient:
         filter_clause: list[dict] = []
         if filters:
             for key, value in filters.items():
-                mapped_key = f"metadata.{key}" if key in TOP_DOWN_FILTER_KEYS else key
-                filter_clause.append({"term": {mapped_key: value}})
+                if value is None:
+                    continue
+                field_variants = build_query_field_candidates(key)
+                values = normalize_filter_variants(value)
+                should: list[dict] = []
+                for field in field_variants:
+                    for candidate in values:
+                        should.append({"term": {field: _coerce_filter_value(candidate)}})
+                if should:
+                    filter_clause.append({"bool": {"should": should, "minimum_should_match": 1}})
 
         body = {
             "size": min(top_k, settings.max_candidates_per_source),
@@ -203,6 +215,21 @@ class ElasticsearchClient:
             logger.warning("Elasticsearch indexing failed: %s", exc)
             return False
 
+    async def delete_document(self, doc_id: str) -> bool:
+        if not self._enabled:
+            return False
+        if self._sample_mode:
+            return True
+        if not await self._ensure_index():
+            return False
+
+        try:
+            resp = await self._client.delete(f"{self._base_url}/{self._index}/_doc/{doc_id}")
+            return resp.status_code in {200, 202}
+        except Exception as exc:
+            logger.warning("Elasticsearch delete failed: %s", exc)
+            return False
+
 
 def _sanitize_metadata(metadata: Dict) -> Dict[str, object]:
     safe: Dict[str, object] = {}
@@ -218,3 +245,13 @@ def _sanitize_metadata(metadata: Dict) -> Dict[str, object]:
         else:
             safe[key] = str(value)
     return safe
+
+
+def _coerce_filter_value(value: object) -> object:
+    if isinstance(value, bool):
+        return bool(value)
+    if isinstance(value, (int, float)):
+        return value
+    if value is None:
+        return ""
+    return str(value)

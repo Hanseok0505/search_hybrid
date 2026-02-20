@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 
 TOP_DOWN_LEVELS: List[str] = [
@@ -60,6 +60,15 @@ TOP_DOWN_FILTER_KEYS: List[str] = [
     "schedule_window",
 ]
 
+# Fields that are stored in a non-normalized string form by at least one backend.
+TOP_DOWN_KEYS_WITH_PREFERRED_TOPLEVEL: List[str] = [
+    "wbs_code",
+    "package_code",
+    "task_code",
+    "csi_division",
+    "spec_section",
+]
+
 CONSTRUCTION_SYNONYMS: Dict[str, List[str]] = {
     "slab": ["deck", "concrete slab", "pour"],
     "pour": ["placement", "casting", "concrete pour"],
@@ -99,6 +108,103 @@ TRADE_PROMPT_TEMPLATES: Dict[str, str] = {
 }
 
 
+def _normalize_filter_value(value: object) -> Optional[Union[str, int, float, bool]]:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        return text
+    if isinstance(value, bool):
+        return bool(value)
+    if isinstance(value, (int, float)):
+        return value
+    return str(value)
+
+
+def normalize_filter_variants(value: object) -> list[Any]:
+    """Return candidate variants for resilient filter matching."""
+
+    if isinstance(value, (list, tuple, set)):
+        flattened: list[Any] = []
+        for item in value:
+            flattened.extend(normalize_filter_variants(item))
+        # deduplicate while preserving order
+        out: list[Any] = []
+        seen = set()
+        for item in flattened:
+            key = "__LIST__"
+            if isinstance(item, str):
+                key = f"str:{item.lower()}"
+            else:
+                key = f"{type(item).__name__}:{item}"
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(item)
+        return out
+
+    normalized = _normalize_filter_value(value)
+    if normalized is None:
+        return []
+    if isinstance(normalized, str):
+        candidates = [normalized]
+        lower = normalized.lower()
+        if lower not in candidates:
+            candidates.append(lower)
+        upper = normalized.upper()
+        if upper not in candidates:
+            candidates.append(upper)
+        return candidates
+    return [normalized]
+
+
+def is_ollama_embedding_model(model_name: str) -> bool:
+    lowered = model_name.lower()
+    return any(
+        keyword in lowered
+        for keyword in (
+            "embed",
+            "embedding",
+            "nomic",
+            "bge",
+            "mxbai",
+            "e5",
+        )
+    )
+
+
+def _ollama_model_aliases(model: str) -> list[str]:
+    name = model.strip()
+    if not name:
+        return []
+
+    aliases = [name]
+    lowered = name.lower()
+    if lowered == "gpt-oss-120b-cloud":
+        aliases.append("gpt-oss:120b-cloud")
+    elif lowered == "gpt-oss:120b-cloud":
+        aliases.append("gpt-oss-120b-cloud")
+    return aliases
+
+
+def expand_construction_query(query: str) -> str:
+    text = (query or "").strip()
+    if not text:
+        return ""
+
+    q = text
+    seen = {text}
+    for key, values in CONSTRUCTION_SYNONYMS.items():
+        if key in q.lower():
+            for value in values:
+                if value and value not in seen:
+                    seen.add(value)
+                    q += f" {value}"
+    return q
+
+
 def merge_top_down_filters(
     filters: Optional[Dict[str, Union[str, int, float, bool]]],
     context: Optional[Dict[str, Union[str, int, float, bool]]],
@@ -110,20 +216,23 @@ def merge_top_down_filters(
         for key, value in context.items():
             if value is None:
                 continue
-            out[key] = value
+            normalized = _normalize_filter_value(value)
+            if normalized is None:
+                continue
+            out[key] = normalized
     return out
 
 
-def expand_construction_query(query: str) -> str:
-    q = query.lower()
-    expansions: List[str] = []
-    for key, values in CONSTRUCTION_SYNONYMS.items():
-        if key in q:
-            expansions.extend(values)
-    if not expansions:
-        return query
-    expanded = " ".join(expansions)
-    return f"{query} {expanded}"
+def build_query_field_candidates(key: str, top_level_field: Optional[str] = None) -> list[str]:
+    mapped_key = f"metadata.{key}" if key in TOP_DOWN_FILTER_KEYS else key
+    fields: list[str] = [mapped_key]
+    fields.append(f"{mapped_key}.keyword")
+
+    top_level_candidate = top_level_field or (key if key in TOP_DOWN_KEYS_WITH_PREFERRED_TOPLEVEL else None)
+    if top_level_candidate:
+        fields.append(top_level_candidate)
+        fields.append(f"{top_level_candidate}.keyword")
+    return fields
 
 
 def build_context_should_clauses(filters: Dict[str, Union[str, int, float, bool]]) -> List[Dict]:
@@ -144,16 +253,23 @@ def build_context_should_clauses(filters: Dict[str, Union[str, int, float, bool]
     for key, value in filters.items():
         if key not in TOP_DOWN_FILTER_KEYS:
             continue
-        clauses.append(
-            {
-                "term": {
-                    f"metadata.{key}": {
-                        "value": value,
-                        "boost": boost_by_key.get(key, 1.0),
+        values = normalize_filter_variants(value)
+        fields = build_query_field_candidates(key)
+        if not values:
+            continue
+
+        for field in fields:
+            for candidate in values:
+                clauses.append(
+                    {
+                        "term": {
+                            field: {
+                                "value": candidate,
+                                "boost": boost_by_key.get(key, 1.0),
+                            }
+                        }
                     }
-                }
-            }
-        )
+                )
     return clauses
 
 
@@ -173,12 +289,16 @@ def build_function_score_functions(filters: Dict[str, Union[str, int, float, boo
     for key, value in filters.items():
         if key not in TOP_DOWN_FILTER_KEYS:
             continue
-        functions.append(
-            {
-                "filter": {"term": {f"metadata.{key}": value}},
-                "weight": weight_by_key.get(key, 2.0),
-            }
-        )
+        values = normalize_filter_variants(value)
+        fields = build_query_field_candidates(key)
+        for field in fields:
+            for candidate in values:
+                functions.append(
+                    {
+                        "filter": {"term": {field: candidate}},
+                        "weight": weight_by_key.get(key, 2.0),
+                    }
+                )
 
     functions.append(
         {

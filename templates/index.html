@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -6,662 +6,955 @@
   <title>Hybrid Search Workspace</title>
   <style>
     :root {
-      --bg: #eef2ff;
+      --bg: #f5f7fb;
       --panel: #ffffff;
-      --panel-soft: #f6f8fc;
-      --line: #d4deee;
-      --text: #18243a;
-      --muted: #61728d;
-      --primary: #3557ff;
-      --primary-2: #00a5a5;
-      --danger: #b91c1c;
-      --warn: #c26a00;
+      --line: #dbe2ef;
+      --line-strong: #c8d2e5;
+      --text: #121926;
+      --muted: #5c667d;
+      --primary: #2563eb;
+      --primary-soft: #eaf1ff;
+      --ok: #0f9d58;
+      --warn: #b96a06;
+      --danger: #dc2626;
+      --radius: 14px;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      --font: "Segoe UI", "Pretendard", "Noto Sans KR", sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
+      font-family: var(--font);
       color: var(--text);
-      font-family: "Inter", "Noto Sans KR", "Segoe UI", sans-serif;
       background:
-        radial-gradient(1200px 600px at 90% -10%, #dce8ff, transparent 60%),
-        radial-gradient(900px 500px at 0% 0%, #e2f9f9, transparent 45%),
+        radial-gradient(circle at 10% 0%, #e6edff 0%, transparent 35%),
+        radial-gradient(circle at 95% 0%, #eaf9f2 0%, transparent 32%),
         var(--bg);
     }
-    .topbar {
-      border-bottom: 1px solid var(--line);
-      background: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 12px 16px;
-      position: sticky;
-      top: 0;
-      z-index: 2;
-    }
-    .topbar h1 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 700;
-    }
-    .topbar small {
-      color: var(--muted);
-      font-size: 12px;
-    }
-    .btn {
-      border: 1px solid var(--line);
-      background: #fff;
-      border-radius: 10px;
-      padding: 8px 12px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .btn.primary {
-      color: #fff;
-      border: 0;
-      background: linear-gradient(90deg, var(--primary), var(--primary-2));
-    }
-    .btn.ghost {
-      background: var(--panel-soft);
-      color: var(--text);
-    }
-    .status {
-      min-width: 170px;
-      text-align: right;
-      color: var(--muted);
-      font-size: 12px;
-    }
-    .layout {
-      padding: 14px;
-      display: grid;
-      grid-template-columns: 300px 1fr 360px;
-      gap: 14px;
-      min-height: calc(100vh - 59px);
-    }
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
-    .panel-hd {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--line);
-      font-weight: 700;
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: center;
-      font-size: 14px;
-      background: var(--panel-soft);
-    }
-    .panel-bd {
+
+    .shell {
+      max-width: 1880px;
+      margin: 0 auto;
+      min-height: 100vh;
       padding: 12px;
       display: grid;
-      gap: 10px;
-      overflow: auto;
-      min-height: 0;
+      grid-template-columns: 340px minmax(660px, 1fr) 380px;
+      gap: 12px;
     }
+
+    .pane {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100vh - 24px);
+      overflow: hidden;
+    }
+
+    .pane-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+    }
+
+    .pane-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .pane-subtitle {
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .pane-body {
+      padding: 12px;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+      flex: 1;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      padding: 10px;
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
     label {
       display: block;
-      margin: 2px 0;
-      font-size: 12px;
+      font-size: 11px;
       color: var(--muted);
+      margin: 0 0 4px;
     }
-    input[type="text"], input[type="number"], textarea, select {
+
+    input, select, textarea, button {
       width: 100%;
-      border: 1px solid var(--line);
-      background: #fff;
-      border-radius: 9px;
-      padding: 8px 10px;
-      font-size: 13px;
-      color: var(--text);
-    }
-    textarea {
-      min-height: 110px;
-      resize: vertical;
-      font-family: "Inter", "Noto Sans KR", sans-serif;
-      line-height: 1.4;
-    }
-    .row {
-      display: grid;
-      gap: 8px;
-      grid-template-columns: 1fr 1fr;
-    }
-    .btn-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .meta {
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.35;
-    }
-    .warn {
-      color: var(--warn);
-    }
-    .error {
-      color: var(--danger);
-    }
-    .source-list {
-      display: grid;
-      gap: 8px;
-      padding: 2px 0;
-    }
-    .source-item {
-      border: 1px solid var(--line);
+      border: 1px solid var(--line-strong);
       border-radius: 10px;
       padding: 9px 10px;
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 8px;
-      align-items: start;
+      font: inherit;
       background: #fff;
+      color: var(--text);
     }
-    .source-title {
+
+    textarea {
+      resize: vertical;
+      min-height: 98px;
+    }
+
+    button {
+      cursor: pointer;
+      background: #f8faff;
+    }
+
+    button:hover { filter: brightness(0.99); }
+
+    button.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
       font-weight: 700;
-      font-size: 13px;
-      line-height: 1.3;
     }
-    .source-id {
+
+    button.warn {
+      border-color: #fecaca;
+      color: #991b1b;
+      background: #fff7f7;
+    }
+
+    .inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .inline input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+    }
+
+    .toolbar > * { flex: 1; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 11px;
+      color: #32425e;
+      background: #f8fafe;
+      white-space: nowrap;
+    }
+
+    .pill.ok {
+      border-color: #bde8cf;
+      color: #0f7a44;
+      background: #eefbf3;
+    }
+
+    .pill.warn {
+      border-color: #f7d28a;
+      color: #8a5a05;
+      background: #fff8ea;
+    }
+
+    .status-line {
       font-size: 11px;
       color: var(--muted);
-      margin-top: 3px;
-      word-break: break-all;
+      line-height: 1.4;
+      white-space: pre-wrap;
     }
-    .pill {
-      margin-top: 6px;
-      font-size: 10px;
-      display: inline-block;
-      border-radius: 999px;
-      padding: 2px 8px;
-      background: #e9edff;
-      color: #2d458f;
-      font-weight: 700;
-    }
-    .pre {
-      margin: 0;
-      background: #fbfdff;
+
+    .list {
       border: 1px solid var(--line);
       border-radius: 10px;
-      padding: 10px;
-      font-family: ui-monospace, Consolas, "D2Coding", monospace;
-      font-size: 12px;
-      line-height: 1.5;
-      white-space: pre-wrap;
-      word-break: break-word;
-      min-height: 100px;
-      max-height: 260px;
+      background: #fff;
       overflow: auto;
+      min-height: 140px;
+      max-height: 360px;
+      padding: 8px;
     }
-    .answer {
-      background: #f3f7ff;
-      border: 1px solid #cfe0ff;
+
+    .source-item {
+      border: 1px solid #e7ecf6;
       border-radius: 10px;
-      padding: 10px;
-      min-height: 180px;
-      white-space: pre-wrap;
-      line-height: 1.5;
-      font-size: 14px;
+      padding: 8px;
+      margin-bottom: 8px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: start;
+      background: #fcfdff;
     }
-    .small {
+
+    .source-title {
+      font-size: 12px;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .source-meta {
+      margin-top: 4px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
       font-size: 11px;
       color: var(--muted);
     }
-    @media (max-width: 1200px) {
-      .layout {
+
+    .content-box {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      padding: 12px;
+      min-height: 180px;
+      white-space: pre-wrap;
+      overflow: auto;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .content-box.mono {
+      font-family: var(--mono);
+      font-size: 12px;
+      min-height: 220px;
+      max-height: 460px;
+    }
+
+    .hit-card {
+      border: 1px solid #e7ecf6;
+      border-radius: 10px;
+      background: #fff;
+      padding: 9px;
+      margin-bottom: 8px;
+    }
+
+    .hit-title {
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hit-meta {
+      margin-top: 5px;
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .hit-snippet {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #293447;
+      line-height: 1.4;
+    }
+
+    .chat-compose {
+      margin-top: auto;
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .empty {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 8px;
+    }
+
+    .topline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    @media (max-width: 1500px) {
+      .shell {
+        grid-template-columns: 320px 1fr;
+      }
+      .viewer-pane {
+        grid-column: 1 / -1;
+        min-height: 460px;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .shell {
         grid-template-columns: 1fr;
       }
-      .topbar {
-        flex-direction: column;
-        align-items: flex-start;
+      .pane {
+        min-height: auto;
       }
-      .status {
-        text-align: left;
-      }
-      .panel {
-        min-height: 420px;
-      }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <div>
-      <h1>Hybrid Search Workspace</h1>
-      <small>Construction RAG console</small>
-    </div>
-    <div>
-      <span id="statusBadges" class="meta">Health: loading...</span>
-    </div>
-    <div class="btn-row">
-      <button class="btn" onclick="refreshAll()">Refresh</button>
-      <button class="btn ghost" onclick="runCacheInvalidate()">Invalidate Search Cache</button>
-    </div>
-    <div class="status" id="statusLine"></div>
-  </header>
-
-  <main class="layout">
-    <section class="panel">
-      <div class="panel-hd">
-        <span>01. Sources</span>
-        <span id="embeddedOnlyText" class="small">embedded-only filter off</span>
+  <div class="shell">
+    <aside class="pane">
+      <div class="pane-header">
+        <h2 class="pane-title">Sources & Upload</h2>
+        <div class="pane-subtitle">Upload files, auto extract context, and manage source set.</div>
       </div>
-      <div class="panel-bd">
-        <label>Upload file</label>
-        <input type="file" id="uploadFile" />
+      <div class="pane-body">
+        <div class="card">
+          <h3>Upload</h3>
+          <label for="uploadFile">File</label>
+          <input id="uploadFile" type="file" />
 
-        <label>Top-down context JSON</label>
-        <textarea id="uploadCtx">{"project_id":"PROJ-SMART-CAMPUS","building":"TOWER-A","level":"B2"}</textarea>
+          <div class="grid-2" style="margin-top:8px;">
+            <div>
+              <label for="uploadProject">project_id (optional)</label>
+              <input id="uploadProject" value="" placeholder="auto if omitted" />
+            </div>
+            <div>
+              <label for="uploadBuilding">building (optional)</label>
+              <input id="uploadBuilding" value="" placeholder="auto if omitted" />
+            </div>
+          </div>
+          <div class="grid-2" style="margin-top:8px;">
+            <div>
+              <label for="uploadLevel">level (optional)</label>
+              <input id="uploadLevel" value="" placeholder="auto if omitted" />
+            </div>
+            <div>
+              <label for="uploadPackage">package_code (optional)</label>
+              <input id="uploadPackage" value="" placeholder="auto if omitted" />
+            </div>
+          </div>
+          <div style="margin-top:8px;">
+            <label for="uploadWorkType">work_type (optional)</label>
+            <input id="uploadWorkType" value="" placeholder="auto if omitted" />
+          </div>
 
-        <div class="row">
-          <label><input type="checkbox" id="alreadyEmbedded" /> mark as already embedded</label>
-          <label><input type="checkbox" id="embeddedOnly" onchange="refreshSourceFilter()"> embedded-only only</label>
+          <div class="inline" style="margin-top:8px;">
+            <input id="uploadAlreadyEmbedded" type="checkbox" />
+            <label for="uploadAlreadyEmbedded" style="margin:0;">already embedded (external vector)</label>
+          </div>
+
+          <div class="toolbar" style="margin-top:10px;">
+            <button class="primary" type="button" onclick="uploadFile()">Upload</button>
+            <button type="button" onclick="refreshSources()">Refresh Sources</button>
+          </div>
+          <div id="uploadStatus" class="status-line" style="margin-top:8px;">No upload activity yet.</div>
         </div>
 
-        <div class="btn-row">
-          <button class="btn primary" onclick="uploadSource()">Upload + Index</button>
-          <button class="btn ghost" onclick="loadSources()">Reload Sources</button>
+        <div class="card">
+          <h3>Search Filters</h3>
+          <div class="grid-2">
+            <div>
+              <label for="filterProject">project_id</label>
+              <input id="filterProject" placeholder="project_id" />
+            </div>
+            <div>
+              <label for="filterBuilding">building</label>
+              <input id="filterBuilding" placeholder="building" />
+            </div>
+          </div>
+          <div class="grid-2" style="margin-top:8px;">
+            <div>
+              <label for="filterLevel">level</label>
+              <input id="filterLevel" placeholder="level" />
+            </div>
+            <div>
+              <label for="filterWorkType">work_type</label>
+              <input id="filterWorkType" placeholder="work_type" />
+            </div>
+          </div>
+          <div style="margin-top:8px;">
+            <label for="filterPackageCode">package_code</label>
+            <input id="filterPackageCode" placeholder="package_code" />
+          </div>
+          <div class="inline" style="margin-top:8px;">
+            <input id="embeddedOnly" type="checkbox" />
+            <label for="embeddedOnly" style="margin:0;">embedded only</label>
+          </div>
         </div>
-        <div id="uploadMsg" class="meta"></div>
 
-        <hr style="border:0;border-top:1px solid var(--line);" />
-        <div class="small">Source list (select before asking):</div>
-        <div id="sources" class="source-list"></div>
+        <div class="card" style="flex:1; min-height:280px; display:flex; flex-direction:column;">
+          <div class="topline">
+            <h3 style="margin:0;">Sources</h3>
+            <div class="inline">
+              <input id="selectAllSources" type="checkbox" onclick="toggleAllSources(this.checked)" />
+              <label for="selectAllSources" style="margin:0;">all</label>
+            </div>
+          </div>
+          <div class="toolbar" style="margin-bottom:8px;">
+            <button type="button" onclick="clearSelections()">Clear</button>
+            <button type="button" onclick="refreshSources()">Reload</button>
+            <button type="button" class="warn" onclick="deleteSelectedSources()">Delete</button>
+          </div>
+          <div id="sourceList" class="list" style="flex:1;"><div class="empty">Loading sources...</div></div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="pane">
+      <div class="pane-header">
+        <div class="topline" style="margin:0;">
+          <div>
+            <h2 class="pane-title" style="margin:0;">Hybrid Search Chat</h2>
+            <div class="pane-subtitle">Unified retrieval + grounded answers (RAG), with search-only mode.</div>
+          </div>
+          <div class="inline" style="flex-wrap:wrap;">
+            <span id="healthBadge" class="pill warn">checking service</span>
+            <span id="providerState" class="pill">provider: <strong>ollama</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pane-body" style="gap:10px;">
+        <div class="card">
+          <div class="grid-3">
+            <div>
+              <label for="modeSelect">Mode</label>
+              <select id="modeSelect">
+                <option value="ask">RAG Answer</option>
+                <option value="search">Search Only (Elastic)</option>
+                <option value="free">Free API (RAG)</option>
+              </select>
+            </div>
+            <div>
+              <label for="providerSelect">Provider</label>
+              <select id="providerSelect"></select>
+            </div>
+            <div>
+              <label for="modelSelect">Model</label>
+              <select id="modelSelect"></select>
+            </div>
+          </div>
+          <div class="grid-3" style="margin-top:8px;">
+            <div>
+              <label for="topK">top_k</label>
+              <input id="topK" type="number" min="1" max="50" value="8" />
+            </div>
+            <div>
+              <label for="maxTokens">max_tokens</label>
+              <input id="maxTokens" type="number" min="64" max="8192" value="1024" />
+            </div>
+            <div>
+              <label for="useCache">Use cache</label>
+              <select id="useCache">
+                <option value="true">true</option>
+                <option value="false">false</option>
+              </select>
+            </div>
+          </div>
+          <div class="toolbar" style="margin-top:8px;">
+            <button type="button" onclick="viewCacheStats()">Cache Stats</button>
+            <button type="button" onclick="clearOutput()">Clear Output</button>
+          </div>
+        </div>
+
+        <div class="content-box" id="answerBox">Ready.</div>
+
+        <div class="card" style="margin-top:auto;">
+          <div class="inline" style="justify-content:space-between; margin-bottom:6px; flex-wrap:wrap;">
+            <div class="inline" style="flex-wrap:wrap;">
+              <span class="pill" id="answerMeta">provider:- model:-</span>
+              <span class="pill" id="answerTook">took:-</span>
+              <span class="pill" id="answerRag">rag:false</span>
+            </div>
+            <div id="queryMeta" class="status-line"></div>
+          </div>
+
+          <div class="chat-compose">
+            <label for="queryBox">Query</label>
+            <textarea id="queryBox" placeholder="Ask about checklist, risk, schedule, or method statement..."></textarea>
+            <div class="toolbar">
+              <button class="primary" type="button" onclick="runPrimary()">Run</button>
+              <button type="button" onclick="clearViewer()">Clear Viewer</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="min-height:180px;">
+          <h3 style="margin-bottom:8px;">Result Hits</h3>
+          <div id="searchResult" class="list" style="max-height:320px;"><div class="empty">No results yet.</div></div>
+        </div>
+      </div>
+    </main>
+
+    <section class="pane viewer-pane">
+      <div class="pane-header">
+        <h2 class="pane-title">Inspector</h2>
+        <div class="pane-subtitle">Open source content and inspect hit evidence.</div>
+      </div>
+      <div class="pane-body">
+        <div class="card" style="min-height:220px; display:flex; flex-direction:column;">
+          <h3>Top hits</h3>
+          <div id="topHits" class="list" style="flex:1;"><div class="empty">No hits yet.</div></div>
+        </div>
+
+        <div class="card" style="flex:1; display:flex; flex-direction:column; min-height:320px;">
+          <div class="inline" style="justify-content:space-between; margin-bottom:6px;">
+            <h3 id="viewerTitle" style="margin:0;">Source viewer</h3>
+            <button type="button" onclick="clearViewer()" style="width:auto; padding:6px 10px;">Clear</button>
+          </div>
+          <pre id="viewerBody" class="content-box mono" style="flex:1; margin:0;"></pre>
+        </div>
       </div>
     </section>
-
-    <section class="panel">
-      <div class="panel-hd">
-        <span>02. Search / RAG</span>
-        <span class="small" id="modelHint"></span>
-      </div>
-      <div class="panel-bd">
-        <div class="row">
-          <div>
-            <label>Provider</label>
-            <select id="provider" onchange="loadModels()">
-              <option value="ollama">ollama</option>
-              <option value="openai_compatible">openai_compatible</option>
-              <option value="openai">openai</option>
-              <option value="bedrock">bedrock</option>
-            </select>
-          </div>
-          <div>
-            <label>Model</label>
-            <select id="model"></select>
-          </div>
-        </div>
-
-        <div class="row">
-          <div>
-            <label>Top K</label>
-            <input id="topK" type="number" min="1" max="50" value="8" />
-          </div>
-          <div>
-            <label>Max Tokens</label>
-            <input id="maxTokens" type="number" min="32" max="8192" value="512" />
-          </div>
-        </div>
-
-        <div class="row">
-          <div>
-            <label>Cache</label>
-            <select id="useCache">
-              <option value="true">true</option>
-              <option value="false">false</option>
-            </select>
-          </div>
-        </div>
-
-        <label>Top-down context JSON</label>
-        <textarea id="askCtx">{"project_id":"PROJ-SMART-CAMPUS","building":"TOWER-A","level":"B2","package_code":"PKG-STR-001","work_type":"concrete"}</textarea>
-
-        <label>Question</label>
-        <textarea id="askQuery">Summarize slab pour risk controls and readiness evidence.</textarea>
-
-        <div class="btn-row">
-          <button class="btn primary" onclick="runAsk()">Run RAG Answer</button>
-          <button class="btn ghost" onclick="runSearchOnly()">Search Only</button>
-          <button class="btn ghost" onclick="runFreeAnswer()">Free API</button>
-        </div>
-
-        <div class="meta">
-          Non-RAG: "Free API" is utility lookup.
-          RAG answer always goes through <strong>/v1/ask</strong> (retrieval + synthesis).
-        </div>
-
-        <div class="small">Final Answer</div>
-        <div id="askMeta" class="meta"></div>
-        <div id="answerOut" class="answer">No answer yet.</div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-hd">
-        <span>03. Debug / Observability</span>
-      </div>
-      <div class="panel-bd">
-        <div>
-          <div class="small">Retrieved hits (ranked)</div>
-          <pre id="hitsOut" class="pre">{}</pre>
-        </div>
-
-        <div>
-          <div class="small">Upload response</div>
-          <pre id="uploadOut" class="pre">{}</pre>
-        </div>
-
-        <div>
-          <div class="small">Free API response</div>
-          <pre id="freeOut" class="pre">{}</pre>
-        </div>
-
-        <div>
-          <div class="small">Cache stats</div>
-          <pre id="cacheOut" class="pre">{}</pre>
-        </div>
-      </div>
-    </section>
-  </main>
+  </div>
 
   <script>
-    const DEFAULT_OLLAMA_MODEL = "gpt-oss-120b-cloud";
+    let SOURCES = [];
 
-    function isModelAvailable(option) {
-      if (!option) {
-        return false;
+    function el(id) { return document.getElementById(id); }
+
+    function escape(raw) {
+      return String(raw || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function selectedSourceIds() {
+      return Array.from(document.querySelectorAll(".source-check:checked")).map((x) => x.value);
+    }
+
+    function collectTopDown() {
+      const out = {};
+      const payload = {
+        project_id: el("filterProject").value.trim(),
+        building: el("filterBuilding").value.trim(),
+        level: el("filterLevel").value.trim(),
+        work_type: el("filterWorkType").value.trim(),
+        package_code: el("filterPackageCode").value.trim(),
+      };
+      Object.entries(payload).forEach(([k, v]) => { if (v) out[k] = v; });
+      return out;
+    }
+
+    function collectUploadTopDown() {
+      const out = {};
+      const payload = {
+        project_id: el("uploadProject").value.trim(),
+        building: el("uploadBuilding").value.trim(),
+        level: el("uploadLevel").value.trim(),
+        work_type: el("uploadWorkType").value.trim(),
+        package_code: el("uploadPackage").value.trim(),
+      };
+      Object.entries(payload).forEach(([k, v]) => { if (v) out[k] = v; });
+      return out;
+    }
+
+    function isTruthy(v) {
+      return v === true || v === "true" || v === "1" || v === 1;
+    }
+
+    async function callJSON(url, options = {}) {
+      const r = await fetch(url, options);
+      const text = await r.text();
+      let body = {};
+      try { body = text ? JSON.parse(text) : {}; } catch (e) { body = { error: String(e), raw: text }; }
+      return { ok: r.ok, status: r.status, body };
+    }
+
+    function selectedProviderModel() {
+      const provider = el("providerSelect").value || "ollama";
+      const model = el("modelSelect").value || "";
+      return { provider, model };
+    }
+
+    function renderSourceItem(item) {
+      const node = document.createElement("div");
+      node.className = "source-item";
+
+      const left = document.createElement("div");
+
+      const head = document.createElement("div");
+      head.className = "inline";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.value = item.id;
+      cb.className = "source-check";
+      head.appendChild(cb);
+      const title = document.createElement("div");
+      title.className = "source-title";
+      title.textContent = item.title || item.id;
+      head.appendChild(title);
+      left.appendChild(head);
+
+      const meta = document.createElement("div");
+      meta.className = "source-meta";
+      meta.innerHTML =
+        `<span>${escape(item.id)}</span>` +
+        `<span class="pill">${escape(item.source_type)}</span>` +
+        `<span class="pill">${item.embedded ? "embedded" : "not-embedded"}</span>`;
+      left.appendChild(meta);
+
+      const right = document.createElement("div");
+      right.style.display = "flex";
+      right.style.gap = "6px";
+
+      const btnOpen = document.createElement("button");
+      btnOpen.textContent = "Open";
+      btnOpen.type = "button";
+      btnOpen.style.width = "auto";
+      btnOpen.style.padding = "6px 10px";
+      btnOpen.onclick = () => openSource(item.id);
+      right.appendChild(btnOpen);
+
+      if (item.can_delete) {
+        const btnDelete = document.createElement("button");
+        btnDelete.textContent = "Delete";
+        btnDelete.type = "button";
+        btnDelete.className = "warn";
+        btnDelete.style.width = "auto";
+        btnDelete.style.padding = "6px 10px";
+        btnDelete.onclick = () => deleteSources([item.id]);
+        right.appendChild(btnDelete);
       }
-      return option.dataset.available === "true";
+
+      node.appendChild(left);
+      node.appendChild(right);
+      return node;
     }
 
-    function safeJson(text, fallback = {}) {
-      try { return JSON.parse(text || "{}"); } catch { return fallback; }
-    }
-
-    function esc(str) {
-      return (str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-    }
-
-    function selectedIds() {
-      return Array.from(document.querySelectorAll(".src-check:checked")).map((x) => x.value);
-    }
-
-    async function refreshAll() {
-      await Promise.all([checkHealth(), loadSources(), loadModels()]);
-      await refreshCacheStats();
-    }
-
-    async function checkHealth() {
-      try {
-        const r = await fetch("/v1/health");
-        if (!r.ok) {
-          throw new Error(`HTTP ${r.status}`);
-        }
-        const data = await r.json();
-        document.getElementById("statusBadges").textContent =
-          `Health: ${data.status} | elastic=${data.elastic}, milvus=${data.milvus}, graph=${data.graph}, redis=${data.redis}`;
-      } catch (e) {
-        document.getElementById("statusBadges").textContent = `Health: ${e.message}`;
+    function renderSources() {
+      const root = el("sourceList");
+      if (!SOURCES.length) {
+        root.innerHTML = '<div class="empty">No source yet.</div>';
+        return;
+      }
+      root.innerHTML = "";
+      for (const item of SOURCES) {
+        root.appendChild(renderSourceItem(item));
       }
     }
 
-    function refreshSourceFilter() {
-      const on = document.getElementById("embeddedOnly").checked;
-      document.getElementById("embeddedOnlyText").textContent =
-        on ? "embedded-only filter on" : "embedded-only filter off";
+    function renderSearchResult(hits = []) {
+      const root = el("searchResult");
+      root.innerHTML = "";
+      if (!hits.length) {
+        root.innerHTML = '<div class="empty">No results</div>';
+        return;
+      }
+      for (const hit of hits) {
+        const node = document.createElement("div");
+        node.className = "hit-card";
+        const file = hit.metadata ? (hit.metadata.original_file_name || hit.metadata.stored_file_name || "-") : "-";
+        node.innerHTML =
+          `<div class="hit-title"><span>${escape(hit.title || hit.id)}</span><span class="pill">${escape(hit.source || "source")}</span></div>` +
+          `<div class="hit-meta"><span>id:${escape(hit.id)}</span><span>file:${escape(file)}</span><span>score:${(hit.fused_score || 0).toFixed(2)}</span></div>` +
+          `<div class="hit-snippet">${escape((hit.content || "").slice(0, 260))}...</div>`;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = "Open source";
+        btn.style.marginTop = "6px";
+        btn.onclick = () => openSource(hit.id);
+        node.appendChild(btn);
+        root.appendChild(node);
+      }
     }
 
-    async function loadSources() {
-      try {
-        const res = await fetch("/v1/sources");
-        const data = await res.json();
-        const root = document.getElementById("sources");
-        const items = data.items || [];
-        refreshSourceFilter();
-
-        if (!items.length) {
-          root.innerHTML = '<div class="meta">No sources found.</div>';
-          return;
-        }
-        root.innerHTML = items.map((s) => `
-          <label class="source-item">
-            <input class="src-check" type="checkbox" value="${esc(s.id)}" />
-            <div>
-              <div class="source-title">${esc(s.title || s.id)}</div>
-              <div class="source-id">${esc(s.id)}</div>
-              <span class="pill">${esc(s.source_type)}${s.embedded ? " | embedded" : ""}</span>
-            </div>
-          </label>
-        `).join("");
-      } catch (e) {
-        document.getElementById("sources").innerHTML = `<div class="error">${e.message}</div>`;
+    function renderTopHits(hits = []) {
+      const root = el("topHits");
+      root.innerHTML = "";
+      if (!hits.length) {
+        root.innerHTML = '<div class="empty">No hits yet.</div>';
+        return;
       }
+      for (const [idx, hit] of hits.entries()) {
+        const node = document.createElement("div");
+        node.className = "hit-card";
+        node.innerHTML =
+          `<div class="hit-title"><span>(${idx + 1}) ${escape(hit.title || hit.id)}</span><span class="pill">raw:${(hit.raw_score || 0).toFixed(2)}</span></div>` +
+          `<div class="hit-meta"><span>id:${escape(hit.id)}</span><span>source:${escape(hit.source || "source")}</span></div>` +
+          `<div class="hit-snippet">${escape((hit.content || "").slice(0, 220))}...</div>`;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = "Open";
+        btn.style.marginTop = "6px";
+        btn.onclick = () => openSource(hit.id);
+        node.appendChild(btn);
+        root.appendChild(node);
+      }
+    }
+
+    function toggleAllSources(checked) {
+      document.querySelectorAll(".source-check").forEach((x) => (x.checked = checked));
+    }
+
+    function clearSelections() {
+      document.querySelectorAll(".source-check").forEach((x) => (x.checked = false));
+      const all = el("selectAllSources");
+      if (all) all.checked = false;
+    }
+
+    function clearOutput() {
+      el("answerBox").textContent = "Ready.";
+      el("queryMeta").textContent = "";
+      el("answerMeta").textContent = "provider:- model:-";
+      el("answerTook").textContent = "took:-";
+      el("answerRag").textContent = "rag:false";
+      renderSearchResult([]);
+      renderTopHits([]);
+    }
+
+    function clearViewer() {
+      el("viewerTitle").textContent = "Source viewer";
+      el("viewerBody").textContent = "";
+    }
+
+    async function loadHealth() {
+      const r = await callJSON("/v1/health");
+      if (!r.ok) return;
+      const h = r.body || {};
+      const txt = `status ${h.status} / elastic:${h.elastic} / milvus:${h.milvus} / graph:${h.graph} / redis:${h.redis}`;
+      const badge = el("healthBadge");
+      badge.textContent = txt;
+      badge.className = "pill " + (h.status === "ok" ? "ok" : "warn");
     }
 
     async function loadModels() {
-      const provider = document.getElementById("provider").value;
-      const modelSel = document.getElementById("model");
-      const hint = document.getElementById("modelHint");
-      modelSel.innerHTML = "";
-      const targetModel = provider === "ollama" ? DEFAULT_OLLAMA_MODEL : "";
-
-      try {
-        const res = await fetch(`/v1/models?provider=${encodeURIComponent(provider)}`);
-        const data = await res.json();
-        const items = data.items || [];
-        let targetIndex = -1;
-        let targetAvailable = false;
-        const fallbackCandidate = [];
-        items.forEach((m, idx) => {
-          const opt = document.createElement("option");
-          opt.value = m.model;
-          opt.dataset.available = m.available ? "true" : "false";
-          opt.textContent = `${m.model}${m.available ? "" : " (unreachable)"}`;
-
-          if (m.model === targetModel && provider === "ollama") {
-            targetIndex = idx;
-            targetAvailable = !!m.available;
-          }
-          if (provider === "ollama" && m.available) {
-            fallbackCandidate.push(opt);
-          }
-          modelSel.appendChild(opt);
-        });
-
-        if (provider === "ollama") {
-          const preferred = targetIndex >= 0 ? modelSel.options[targetIndex] : null;
-          if (preferred && isModelAvailable(preferred)) {
-            modelSel.value = preferred.value;
-          } else if (fallbackCandidate.length) {
-            modelSel.value = fallbackCandidate[0].value;
-            if (!targetAvailable) {
-              hint.innerHTML = `<span class="warn">Default Ollama model '${DEFAULT_OLLAMA_MODEL}' is unavailable. Switched to available model '${modelSel.value}'.</span>`;
-            }
-          } else if (targetIndex >= 0) {
-            modelSel.value = targetModel;
-          }
-        } else if (targetIndex >= 0) {
-          modelSel.value = targetModel;
-        }
-
-        if (!modelSel.value && items.length) {
-          modelSel.value = items[0].model;
-        }
-        if (!items.length) {
-          const fallback = document.createElement("option");
-          fallback.value = "";
-          fallback.textContent = "(no model)";
-          modelSel.appendChild(fallback);
-        }
-
-        const anyAvailable = items.some((m) => m.available);
-        if (provider === "ollama") {
-          if (targetIndex >= 0 && !targetAvailable) {
-            if (!fallbackCandidate.length) {
-              hint.innerHTML = "<span class=\"warn\">Default Ollama model is unreachable and no ready model found.</span>";
-            }
-          } else if (!anyAvailable) {
-            hint.innerHTML = "<span class=\"warn\">No reachable Ollama model found.</span>";
-          } else {
-            hint.textContent = "";
-          }
-        } else {
-          hint.textContent = "";
-        }
-      } catch (e) {
-        const fallback = document.createElement("option");
-        fallback.value = "";
-        fallback.textContent = "(model load failed)";
-        modelSel.appendChild(fallback);
-        hint.textContent = e.message;
+      const provider = el("providerSelect").value || "ollama";
+      const r = await callJSON(`/v1/models?provider=${encodeURIComponent(provider)}`);
+      if (!r.ok || !Array.isArray(r.body.items)) return;
+      const models = r.body.items;
+      const sel = el("modelSelect");
+      sel.innerHTML = "";
+      for (const item of models) {
+        const opt = document.createElement("option");
+        opt.value = item.model;
+        opt.textContent = `${item.model}${item.available ? "" : " (not ready)"}`;
+        sel.appendChild(opt);
       }
+      if (!models.length) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "(no model)";
+        sel.appendChild(opt);
+      }
+      el("providerState").innerHTML = `provider: <strong>${escape(provider)}</strong>`;
     }
 
-    async function refreshCacheStats() {
-      try {
-        const res = await fetch("/v1/cache/stats");
-        if (res.status === 404) {
-          document.getElementById("cacheOut").textContent = "cache endpoint not found";
-          return;
-        }
-        const data = await res.json();
-        document.getElementById("cacheOut").textContent = JSON.stringify(data, null, 2);
-      } catch (e) {
-        document.getElementById("cacheOut").textContent = e.message;
+    async function loadProviderList() {
+      const providers = ["ollama", "openai_compatible", "openai", "bedrock", "gemini"];
+      const sel = el("providerSelect");
+      sel.innerHTML = "";
+      for (const p of providers) {
+        const opt = document.createElement("option");
+        opt.value = p;
+        opt.textContent = p;
+        sel.appendChild(opt);
       }
+      sel.value = "ollama";
+      sel.addEventListener("change", loadModels);
+      await loadModels();
     }
 
-    async function runCacheInvalidate() {
-      try {
-        const res = await fetch("/v1/cache/invalidate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prefix: "search:" }),
-        });
-        const data = await res.json();
-        document.getElementById("statusLine").textContent = `cache invalidated: ${data.deleted}`;
-        await refreshCacheStats();
-      } catch (e) {
-        document.getElementById("statusLine").textContent = e.message;
-      }
-    }
-
-    async function uploadSource() {
-      const file = document.getElementById("uploadFile").files[0];
-      if (!file) {
-        document.getElementById("uploadMsg").textContent = "Select a file first.";
+    async function refreshSources() {
+      const r = await callJSON("/v1/sources");
+      if (!r.ok) {
+        el("sourceList").innerHTML = `<div class="empty">load failed (${r.status})</div>`;
         return;
       }
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("top_down_context", document.getElementById("uploadCtx").value || "{}");
-      fd.append("already_embedded", document.getElementById("alreadyEmbedded").checked ? "true" : "false");
+      SOURCES = r.body.items || [];
+      renderSources();
+    }
 
+    async function uploadFile() {
+      const fileEl = el("uploadFile");
+      if (!fileEl.files || !fileEl.files[0]) {
+        el("uploadStatus").textContent = "No file selected.";
+        return;
+      }
+
+      const form = new FormData();
+      form.append("file", fileEl.files[0]);
+      form.append("top_down_context", JSON.stringify(collectUploadTopDown()));
+      form.append("already_embedded", el("uploadAlreadyEmbedded").checked ? "true" : "false");
+
+      const r = await fetch("/v1/upload", { method: "POST", body: form });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        el("uploadStatus").textContent = `upload failed: ${r.status}`;
+        return;
+      }
+
+      const ctx = body.top_down_context || {};
+      const ctxText = Object.keys(ctx).length ? JSON.stringify(ctx) : "{}";
+      el("uploadStatus").textContent = [
+        `uploaded: ${body.doc_id}`,
+        `parser:${body.parser}`,
+        `extracted:${body.extracted}`,
+        `embedding:${body.embedding_indexed ? "ok" : "skipped"}`,
+        `auto_context:${body.automatic_context_extracted ? "yes" : "no"}`,
+        `ctx:${ctxText}`,
+        body.warning ? `warning:${body.warning}` : "",
+      ].filter(Boolean).join("\n");
+
+      await refreshSources();
+    }
+
+    async function deleteSources(ids, options = {}) {
+      const deleteAllUploads = !!options.deleteAllUploads;
+      if (!deleteAllUploads && !ids.length) {
+        el("uploadStatus").textContent = "No source selected.";
+        return;
+      }
+
+      const payload = deleteAllUploads ? { delete_all_uploads: true } : { source_ids: ids };
+
+      let r;
       try {
-        const res = await fetch("/v1/upload", { method: "POST", body: fd });
-        const data = await res.json();
-        document.getElementById("uploadOut").textContent = JSON.stringify(data, null, 2);
-        document.getElementById("uploadMsg").textContent = data.warning || "Uploaded.";
-        await loadSources();
-      } catch (e) {
-        document.getElementById("uploadMsg").textContent = e.message;
-      }
-    }
-
-    async function runAsk() {
-      const model = selectedModelOrFallback();
-      const body = {
-        query: document.getElementById("askQuery").value,
-        top_k: Number(document.getElementById("topK").value || 8),
-        max_tokens: Number(document.getElementById("maxTokens").value || 512),
-        top_down_context: safeJson(document.getElementById("askCtx").value || "{}"),
-        selected_source_ids: selectedIds(),
-        embedded_only: document.getElementById("embeddedOnly").checked,
-        provider: document.getElementById("provider").value,
-        model: model,
-        use_cache: document.getElementById("useCache").value === "true",
-      };
-      if (!body.model) {
-        delete body.model;
-      }
-
-      const res = await fetch("/v1/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      document.getElementById("answerOut").textContent = data.answer || "(empty)";
-      document.getElementById("askMeta").textContent = data.rag_synthesized
-        ? "RAG synthesis: model generated"
-        : `RAG synthesis: fallback (${data.fallback_reason || "unknown"})`;
-      document.getElementById("hitsOut").textContent = JSON.stringify(data.hits || [], null, 2);
-      await refreshCacheStats();
-    }
-
-    function selectedModelOrFallback() {
-      const modelSel = document.getElementById("model");
-      const provider = document.getElementById("provider").value;
-      const selected = modelSel.value;
-      if (!selected) {
-        return "";
-      }
-      if (provider !== "ollama") {
-        return selected;
-      }
-      const selectedOpt = [...modelSel.options].find((x) => x.value === selected);
-      if (isModelAvailable(selectedOpt)) {
-        return selected;
-      }
-
-      const available = [...modelSel.options].find((x) => isModelAvailable(x));
-      return available ? available.value : DEFAULT_OLLAMA_MODEL;
-    }
-
-    async function runSearchOnly() {
-      const body = {
-        query: document.getElementById("askQuery").value,
-        top_k: Number(document.getElementById("topK").value || 8),
-        top_down_context: safeJson(document.getElementById("askCtx").value || "{}"),
-        selected_source_ids: selectedIds(),
-        embedded_only: document.getElementById("embeddedOnly").checked,
-        use_cache: document.getElementById("useCache").value === "true",
-        rerank_with_llm: false,
-      };
-
-      const res = await fetch("/v1/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      document.getElementById("hitsOut").textContent = JSON.stringify(data, null, 2);
-      document.getElementById("answerOut").textContent = "Search-only completed. Select a source and run RAG answer to ground results.";
-      await refreshCacheStats();
-    }
-
-    async function runFreeAnswer() {
-      const query = document.getElementById("askQuery").value;
-      try {
-        const res = await fetch("/v1/free/answer", {
+        r = await callJSON("/v1/sources/delete", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query }),
+          body: JSON.stringify(payload),
         });
-        const data = await res.json();
-        document.getElementById("freeOut").textContent = JSON.stringify(data, null, 2);
-      } catch (e) {
-        document.getElementById("freeOut").textContent = e.message;
+      } catch (err) {
+        el("uploadStatus").textContent = `delete failed: ${String(err)}`;
+        return;
       }
+
+      if (!r.ok) {
+        const detail = r.body && (r.body.detail || r.body.error || r.body.raw)
+          ? ` (${r.body.detail || r.body.error || String(r.body.raw).slice(0, 120)})`
+          : "";
+        el("uploadStatus").textContent = `delete failed ${r.status}${detail}`;
+        return;
+      }
+
+      el("uploadStatus").textContent = `deleted: ${(r.body.deleted_source_ids || []).join(", ") || "none"}`;
+      await refreshSources();
     }
 
-    refreshAll();
+    function deleteSelectedSources() {
+      const ids = selectedSourceIds();
+      const deletableIds = SOURCES.filter((x) => !!x.can_delete).map((x) => x.id);
+      const selected = new Set(ids);
+      const selectedDeletableIds = deletableIds.filter((id) => selected.has(id));
+      const deletableCount = deletableIds.length;
+      const selectedAllDeletable = deletableCount > 0 && selectedDeletableIds.length === deletableCount;
+      if (selectedAllDeletable) {
+        deleteSources([], { deleteAllUploads: true });
+        return;
+      }
+      deleteSources(selectedDeletableIds);
+    }
+
+    async function openSource(sourceId) {
+      const r = await callJSON(`/v1/sources/${encodeURIComponent(sourceId)}/content`);
+      if (!r.ok) {
+        el("viewerTitle").textContent = `Open failed (${r.status})`;
+        el("viewerBody").textContent = JSON.stringify(r.body, null, 2);
+        return;
+      }
+      const row = r.body || {};
+      el("viewerTitle").textContent = `${row.title || sourceId}`;
+      el("viewerBody").textContent = row.content || "(empty)";
+    }
+
+    async function viewCacheStats() {
+      const r = await callJSON("/v1/cache/stats");
+      if (!r.ok) {
+        el("queryMeta").textContent = "cache stats unavailable";
+        return;
+      }
+      const c = r.body;
+      el("queryMeta").textContent = `cache hit:${c.hit_count} miss:${c.miss_count} set:${c.set_count} keys:${c.key_count}`;
+    }
+
+    async function runPrimary() {
+      const mode = el("modeSelect").value;
+      const payload = {
+        query: el("queryBox").value.trim(),
+        top_k: Number(el("topK").value || 8),
+        top_down_context: collectTopDown(),
+        selected_source_ids: selectedSourceIds(),
+        embedded_only: el("embeddedOnly").checked,
+        use_cache: isTruthy(el("useCache").value),
+        max_tokens: Number(el("maxTokens").value || 1024),
+      };
+
+      if (!payload.query) {
+        el("queryMeta").textContent = "query is required";
+        return;
+      }
+
+      const { provider, model } = selectedProviderModel();
+      if (provider) payload.provider = provider;
+      if (model) payload.model = model;
+
+      if (mode === "search") payload.search_backends = ["elastic"];
+      else payload.search_backends = ["elastic", "vector", "graph", "local"];
+
+      const endpoint = mode === "search" ? "/v1/search" : (mode === "ask" ? "/v1/ask" : "/v1/free/answer");
+      const started = Date.now();
+      const r = await callJSON(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const took = Date.now() - started;
+
+      if (!r.ok) {
+        el("queryMeta").textContent = `${endpoint} failed ${r.status}`;
+        return;
+      }
+
+      const body = r.body || {};
+      const hits = body.hits || [];
+      renderSearchResult(hits);
+      renderTopHits(hits);
+      el("answerTook").textContent = `took:${body.took_ms || took}ms`;
+      el("answerRag").textContent = `rag:${!!body.rag_synthesized}`;
+      el("answerMeta").textContent = `provider:${body.provider || provider} model:${body.model || model || "-"}`;
+
+      if (mode === "search") el("answerBox").textContent = `Search completed with ${hits.length} hits.`;
+      else el("answerBox").textContent = body.answer || "";
+
+      el("queryMeta").textContent = `mode:${mode} selected:${payload.selected_source_ids.length} backends:${(payload.search_backends || []).join(",")}`;
+    }
+
+    async function bootstrap() {
+      await Promise.all([loadHealth(), loadProviderList(), refreshSources()]);
+    }
+
+    bootstrap();
   </script>
 </body>
 </html>

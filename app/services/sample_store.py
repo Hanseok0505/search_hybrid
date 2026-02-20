@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from app.models.schemas import Candidate
+from app.domain.construction import normalize_filter_variants
 
 TOKEN_RE = re.compile(r"[A-Za-z0-9가-힣_/-]+")
 
@@ -123,9 +124,10 @@ class SampleStore:
             return True
         metadata = doc.get("metadata", {})
         for key, expected in filters.items():
-            if key in doc and doc.get(key) == expected:
+            variants = [str(v) for v in normalize_filter_variants(expected)]
+            if key in doc and str(doc.get(key)) in variants:
                 continue
-            if metadata.get(key) == expected:
+            if str(metadata.get(key)) in variants:
                 continue
             return False
         return True

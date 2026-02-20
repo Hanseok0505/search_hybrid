@@ -33,7 +33,8 @@ def test_ask_fallback_marks_no_synthesis_when_llm_fails():
         )
     ]
 
-    ans, model_used, synthesized, reason = asyncio.run(_answer_from_hits(payload, hits, _Container()))
+    ans, used_provider, model_used, synthesized, reason = asyncio.run(_answer_from_hits(payload, hits, _Container()))
+    assert used_provider == "ollama"
     assert synthesized is False
     assert reason is not None
     assert "No matching sources" not in ans

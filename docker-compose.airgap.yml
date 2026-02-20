@@ -52,11 +52,20 @@
     container_name: milvus-etcd
     image: quay.io/coreos/etcd:v3.5.5
     environment:
+      - ETCD_NAME=etcd
       - ETCD_AUTO_COMPACTION_MODE=revision
       - ETCD_AUTO_COMPACTION_RETENTION=1000
       - ETCD_QUOTA_BACKEND_BYTES=4294967296
       - ETCD_SNAPSHOT_COUNT=50000
-    command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+    command:
+      - etcd
+      - --advertise-client-urls=http://etcd:2379
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --listen-metrics-urls=http://0.0.0.0:2381
+      - --initial-cluster=etcd=http://etcd:2380
+      - --initial-advertise-peer-urls=http://etcd:2380
+      - --listen-peer-urls=http://0.0.0.0:2380
+      - --data-dir=/etcd
 
   minio:
     container_name: milvus-minio
@@ -78,9 +87,16 @@
     ports:
       - "19530:19530"
       - "9091:9091"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:9091/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 30
     depends_on:
-      - etcd
-      - minio
+      etcd:
+        condition: service_started
+      minio:
+        condition: service_started
 
   app1:
     image: hybrid-search:latest
@@ -120,6 +136,8 @@
       - "host.docker.internal:host-gateway"
     volumes:
       - ./data:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       elasticsearch:
         condition: service_healthy

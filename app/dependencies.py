@@ -26,6 +26,7 @@ class Container:
             vector=self.vector,
             graph=self.graph,
             embedding=self.embedding,
+            llm_gateway=self.llm_gateway,
         )
         self.sources = SourceService()
         self.free_answer = FreeAnswerService()

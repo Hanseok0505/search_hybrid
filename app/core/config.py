@@ -57,9 +57,22 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     ollama_base_urls: str = "http://localhost:11434,http://host.docker.internal:11434"
     ollama_default_model: str = "gpt-oss-120b-cloud"
+    gemini_api_key: Optional[str] = None
+    gemini_default_model: str = "gemini-1.5-flash"
+    gemini_rerank_model: str = "gemini-1.5-flash"
     llm_timeout_sec: float = 20.0
     ollama_timeout_sec: float = 120.0
     tika_url: str = "http://tika:9998"
+    upstage_dpe_enabled: bool = False
+    upstage_dpe_api_key: Optional[str] = None
+    upstage_dpe_base_url: str = "https://api.upstage.ai/v1/document-ai/document-parse"
+    upstage_dpe_timeout_sec: float = 30.0
+    upstage_dpe_min_chars: int = 80
+    auto_context_extract_enabled: bool = True
+    auto_context_extract_use_llm: bool = False
+    auto_context_extract_max_chars: int = 6000
+    auto_context_extract_min_chars_for_llm: int = 120
+    auto_context_extract_llm_model: Optional[str] = None
 
     sample_mode: bool = False
     sample_data_path: str = "sample_data/sample_docs.json"

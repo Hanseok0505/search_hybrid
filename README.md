@@ -12,8 +12,9 @@ Production-oriented MVP for large-scale retrieval with keyword, vector, graph, c
 - Optional rerank: LLM reranker
 - LLM providers: `openai`, `openai_compatible`, `bedrock`, `ollama`
 - UI: Notebook-style 3-pane page (`GET /ui`)
-- Parser service: Apache Tika (`tika`) for DOC/XLS/PPT/HWP-like formats.
+- Parser service: Apache Tika (`tika`) primary, with optional Upstage DPE fallback when extraction is weak/failed.
 - LLM transport for Ollama goes through `litellm` (`litellm.acompletion` / `litellm.aembedding`) with default model `gpt-oss-120b-cloud`.
+- Upload metadata enrichment: project/building/level/package/work_type are auto-extracted from filename/content (rule-based), with optional LLM refinement.
 
 ## 2. Quick Start
 ```bash
@@ -39,6 +40,24 @@ If `tika` is unavailable or you need to restart only the parser:
 docker compose up -d --build tika
 ``` 
 
+Optional DPE fallback settings (`.env`):
+- `UPSTAGE_DPE_ENABLED=false`
+- `UPSTAGE_DPE_API_KEY=`
+- `UPSTAGE_DPE_BASE_URL=https://api.upstage.ai/v1/document-ai/document-parse`
+- `UPSTAGE_DPE_TIMEOUT_SEC=30.0`
+- `UPSTAGE_DPE_MIN_CHARS=80`
+
+If DPE is not configured or not reachable, upload flow skips DPE and continues without failing.
+
+Auto top-down context extraction settings:
+- `AUTO_CONTEXT_EXTRACT_ENABLED=true`
+- `AUTO_CONTEXT_EXTRACT_USE_LLM=false`
+- `AUTO_CONTEXT_EXTRACT_MAX_CHARS=6000`
+- `AUTO_CONTEXT_EXTRACT_MIN_CHARS_FOR_LLM=120`
+- `AUTO_CONTEXT_EXTRACT_LLM_MODEL=`
+
+Manual upload fields still work; manual values override auto-extracted values.
+
 Recommended runtime tuning:
 - Set `OLLAMA_TIMEOUT_SEC` in `.env` when using slow models (for example: `OLLAMA_TIMEOUT_SEC=120.0`).
 
@@ -50,6 +69,7 @@ Main endpoints:
 - `POST /v1/ask` (integrated search + answer)
 - `POST /v1/upload` (supports `already_embedded`)
 - `GET /v1/sources`
+- `POST /v1/sources/delete` (supports `delete_all_uploads`)
 - `GET /v1/models`
 - `POST /v1/free/answer`
 - `POST /v1/llm/invoke`
@@ -86,6 +106,15 @@ curl -X POST "http://localhost:8080/v1/upload" \
   -F "already_embedded=true"
 ```
 If the native extension parser cannot extract text, the service now falls back to Tika extraction.
+For advanced documents, parser order is:
+1. Tika (primary for non-text formats)
+2. Upstage DPE (optional fallback if extraction is short/failed)
+3. Native parser fallback
+
+Upload response now includes:
+- `embedding_indexed` (true when vector indexing succeeded)
+- `automatic_context_extracted` (true when context was inferred)
+- `top_down_context` (final merged context used for indexing)
 
 ## 5. Ask Example
 ```bash

@@ -36,6 +36,7 @@ class SearchRequest(BaseModel):
     rerank_with_llm: bool = False
     selected_source_ids: Optional[List[str]] = None
     embedded_only: bool = False
+    search_backends: Optional[List[str]] = None
 
 
 class Candidate(BaseModel):
@@ -70,7 +71,7 @@ class LLMMessage(BaseModel):
 
 class LLMInvokeRequest(BaseModel):
     task: str = Field(default="chat")  # chat | embed
-    provider: Optional[str] = None  # openai | openai_compatible | bedrock | ollama
+    provider: Optional[str] = None  # openai | openai_compatible | bedrock | ollama | gemini
     model: Optional[str] = None
     text: Optional[str] = None
     messages: Optional[List[LLMMessage]] = None
@@ -109,18 +110,34 @@ class UploadResponse(BaseModel):
     chars_indexed: int
     parser: str = "fallback"
     indexed_backends: List[str] = Field(default_factory=list)
+    embedding_indexed: bool = False
     extracted: bool = True
+    automatic_context_extracted: bool = False
+    top_down_context: Dict = Field(default_factory=dict)
     warning: Optional[str] = None
 
 
 class FreeAnswerRequest(BaseModel):
     query: str = Field(min_length=1, max_length=1024)
+    provider: Optional[str] = None
+    model: Optional[str] = None
+    top_k: int = Field(default=5, ge=1, le=20)
+    max_tokens: Optional[int] = Field(default=512, ge=1, le=8192)
+    selected_source_ids: Optional[List[str]] = None
+    top_down_context: Optional[ConstructionTopDownContext] = None
+    embedded_only: bool = False
+    use_cache: bool = True
+    search_backends: Optional[List[str]] = None
 
 
 class FreeAnswerResponse(BaseModel):
     provider: str
     query: str
     answer: str
+    model: Optional[str] = None
+    hits: Optional[List[Candidate]] = None
+    rag_synthesized: bool = True
+    fallback_reason: Optional[str] = None
     source_url: Optional[str] = None
 
 
@@ -128,6 +145,9 @@ class SourceItem(BaseModel):
     id: str
     title: str
     source_type: str
+    can_delete: bool = True
+    original_file_name: Optional[str] = None
+    stored_file_name: Optional[str] = None
     embedded: bool = False
     selected: bool = False
     metadata: Dict = Field(default_factory=dict)
@@ -136,6 +156,18 @@ class SourceItem(BaseModel):
 class SourceListResponse(BaseModel):
     items: List[SourceItem]
     count: int
+
+
+class SourceContentResponse(BaseModel):
+    id: str
+    title: str
+    source_type: str
+    stored_file_name: Optional[str] = None
+    original_file_name: Optional[str] = None
+    can_delete: bool = False
+    content: str
+    content_truncated: bool = False
+    metadata: Dict = Field(default_factory=dict)
 
 
 class ModelItem(BaseModel):
@@ -148,16 +180,23 @@ class ModelListResponse(BaseModel):
     items: List[ModelItem]
 
 
+class DeleteSourcesRequest(BaseModel):
+    source_ids: List[str] = Field(default_factory=list)
+    delete_all_uploads: bool = False
+    skip_backend_cleanup: bool = False
+
+
 class AskRequest(BaseModel):
     query: str = Field(min_length=1, max_length=4096)
     top_k: int = Field(default=8, ge=1, le=50)
-    max_tokens: Optional[int] = Field(default=64, ge=1, le=8192)
+    max_tokens: Optional[int] = Field(default=512, ge=1, le=8192)
     top_down_context: Optional[ConstructionTopDownContext] = None
     selected_source_ids: Optional[List[str]] = None
     embedded_only: bool = False
     provider: str = "ollama"
     model: Optional[str] = None
     use_cache: bool = True
+    search_backends: Optional[List[str]] = None
 
 
 class AskResponse(BaseModel):
@@ -171,3 +210,8 @@ class AskResponse(BaseModel):
 
 
 
+
+class DeleteSourceResponse(BaseModel):
+    deleted: bool
+    deleted_source_ids: List[str] = Field(default_factory=list)
+    warning: Optional[str] = None

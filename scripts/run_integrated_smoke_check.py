@@ -292,7 +292,7 @@ def main() -> None:
     parser.add_argument(
         "--provider",
         default="ollama",
-        choices=["ollama", "openai", "openai_compatible", "bedrock"],
+        choices=["ollama", "openai", "openai_compatible", "bedrock", "gemini"],
         help="Provider used for /v1/search and /v1/ask",
     )
     parser.add_argument("--model", default=None, help="Provider model override")
